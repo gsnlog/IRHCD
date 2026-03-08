@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Horizontal Curve Designer - IRPWM 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 3px solid #2a5298;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 15px 20px;
+            cursor: pointer;
+            background: #f5f5f5;
+            border: none;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .tab:hover {
+            background: #e0e0e0;
+        }
+
+        .tab.active {
+            background: white;
+            color: #2a5298;
+            border-bottom: 3px solid #2a5298;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 25px;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            color: #1e3c72;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2a5298;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        .btn {
+            padding: 12px 35px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(42, 82, 152, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(42, 82, 152, 0.6);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin-left: 10px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .results-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 25px;
+            border-left: 5px solid #2a5298;
+        }
+
+        .results-card h3 {
+            color: #1e3c72;
+            margin-bottom: 18px;
+            font-size: 1.3em;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .result-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .result-item label {
+            display: block;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 6px;
+            font-size: 0.85em;
+        }
+
+        .result-item .value {
+            font-size: 1.4em;
+            color: #2a5298;
+            font-weight: 700;
+        }
+
+        .result-item .sub-value {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 5px solid #ffc107;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 5px solid #17a2b8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #2a5298;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+        }
+
+        .info-box strong {
+            color: #1976d2;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge-pass {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-fail {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+            
+            .btn-secondary {
+                margin-left: 0;
+            }
+        }
+
+        .three-conditions-box {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe0b3 100%);
+            border: 2px solid #ff9800;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .three-conditions-box h4 {
+            color: #e65100;
+            margin-bottom: 15px;
+        }
+
+        .condition-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 15px;
+            margin: 10px 0;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            align-items: center;
+        }
+
+        .condition-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .condition-formula {
+            font-family: 'Courier New', monospace;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .condition-value {
+            text-align: right;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #ff6f00;
+        }
+
+        .governing {
+            background: #fff3e0 !important;
+            border: 2px solid #ff9800;
+        }
+
+        .governing .condition-value {
+            color: #e65100;
+            font-size: 1.4em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚂 Advanced Horizontal Curve Designer</h1>
+            <p>Professional Edition - IRPWM 2025 Standards - All Features Included</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('simple-curve')">Simple Curve Design</button>
+            <button class="tab" onclick="showTab('three-conditions')">3 Transition Conditions</button>
+            <button class="tab" onclick="showTab('train-types')">All Train Types</button>
+            <button class="tab" onclick="showTab('reduced-virtual')">Reduced/Virtual</button>
+            <button class="tab" onclick="showTab('compound-reverse')">Compound/Reverse</button>
+            <button class="tab" onclick="showTab('layout-methods')">Layout Methods</button>
+            <button class="tab" onclick="showTab('validation')">Validation & Check</button>
+        </div>
+
+        <!-- Tab 1: Simple Curve Design -->
+        <div id="simple-curve" class="tab-content active">
+            <h2 class="section-title">Complete Curve Design with All Features</h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Radius (m) *</label>
+                    <input type="number" id="sc_radius" value="875" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Deflection Angle (degrees) *</label>
+                    <input type="number" id="sc_deflection" value="30" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Design Speed (km/h) *</label>
+                    <input type="number" id="sc_speed" value="75" step="1">
+                </div>
+                <div class="form-group">
+                    <label>Gauge Type</label>
+                    <select id="sc_gauge">
+                        <option value="BG">Broad Gauge (1676 mm)</option>
+                        <option value="MG">Meter Gauge (1000 mm)</option>
+                        <option value="NG">Narrow Gauge (762 mm)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Train Type</label>
+                    <select id="sc_train_type">
+                        <option value="PASSENGER">Passenger (35 mm/sec)</option>
+                        <option value="GOODS">Goods (25 mm/sec)</option>
+                        <option value="SUBURBAN">Suburban (55 mm/sec)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cant Deficiency (mm)</label>
+                    <input type="number" id="sc_cant_def" value="50" step="1">
+                </div>
+            </div>
+
+            <div>
+                <button class="btn" onclick="designCompleteCurve()">Design Complete Curve</button>
+                <button class="btn btn-secondary" onclick="exportReport()">Export Report</button>
+            </div>
+
+            <div id="sc_results" style="display: none;"></div>
+        </div>
+
+        <!-- Tab 2: Three Transition Conditions -->
+        <div id="three-conditions" class="tab-content">
+            <h2 class="section-title">Three Conditions for Transition Length</h2>
+            
+            <div class="info-box">
+                <strong>IRPWM Requirement:</strong> Transition length must satisfy ALL THREE conditions. 
+                The application calculates all three and selects the MAXIMUM value, then rounds UP.
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Actual Cant (mm)</label>
+                    <input type="number" id="tc_cant" value="35" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Cant Deficiency (mm)</label>
+                    <input type="number" id="tc_cant_def" value="50" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Speed (km/h)</label>
+                    <input type="number" id="tc_speed" value="75" step="1">
+                </div>
+                <div class="form-group">
+                    <label>Gauge Type</label>
+                    <select id="tc_gauge">
+                        <option value="BG">Broad Gauge</option>
+                        <option value="MG">Meter Gauge</option>
+                        <option value="NG">Narrow Gauge</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Train Type</label>
+                    <select id="tc_train">
+                        <option value="PASSENGER">Passenger</option>
+                        <option value="GOODS">Goods</option>
+                        <option value="SUBURBAN">Suburban</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn" onclick="calculateThreeConditions()">Calculate All Three Conditions</button>
+
+            <div id="tc_results" style="display: none;"></div>
+        </div>
+
+        <!-- Tab 3: All Train Types Comparison -->
+        <div id="train-types" class="tab-content">
+            <h2 class="section-title">Compare All Train Types</h2>
+            
+            <div class="info-box">
+                <strong>Rate of Cant varies by train type:</strong>
+                <ul style="margin-top: 10px;">
+                    <li>Passenger: 35 mm/sec (standard for mail/express)</li>
+                    <li>Goods: 25 mm/sec (slower to prevent load shifting)</li>
+                    <li>Suburban: 55 mm/sec (faster rate acceptable for EMUs)</li>
+                </ul>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Radius (m)</label>
+                    <input type="number" id="tt_radius" value="875" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Speed (km/h)</label>
+                    <input type="number" id="tt_speed" value="75" step="1">
+                </div>
+                <div class="form-group">
+                    <label>Deflection Angle (degrees)</label>
+                    <input type="number" id="tt_deflection" value="30" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Cant Deficiency (mm)</label>
+                    <input type="number" id="tt_cant_def" value="50" step="1">
+                </div>
+            </div>
+
+            <button class="btn" onclick="compareTrainTypes()">Compare All Train Types</button>
+
+            <div id="tt_results" style="display: none;"></div>
+        </div>
+
+        <!-- Tab 4: Reduced/Virtual Transition -->
+        <div id="reduced-virtual" class="tab-content">
+            <h2 class="section-title">Reduced & Virtual Transition</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Reduced Transition -->
+                <div>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Reduced Transition</h3>
+                    <div class="info-box">
+                        Use when full transition length cannot be provided due to constraints.
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Full Transition Required (m)</label>
+                        <input type="number" id="rt_full" value="80" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Reduced Length Available (m)</label>
+                        <input type="number" id="rt_reduced" value="60" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Full Cant Required (mm)</label>
+                        <input type="number" id="rt_cant" value="50" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Design Speed (km/h)</label>
+                        <input type="number" id="rt_speed" value="75" step="1">
+                    </div>
+                    
+                    <button class="btn" onclick="calculateReducedTransition()">Calculate Reduced Transition</button>
+                    
+                    <div id="rt_results" style="display: none;"></div>
+                </div>
+
+                <!-- Virtual Transition -->
+                <div>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Virtual Transition</h3>
+                    <div class="info-box">
+                        Use when cant must be introduced in straight portion before curve.
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Cant Required (mm)</label>
+                        <input type="number" id="vt_cant" value="40" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Speed (km/h)</label>
+                        <input type="number" id="vt_speed" value="65" step="1">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Straight Length Available (m)</label>
+                        <input type="number" id="vt_straight" value="45" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Rate of Cant (mm/sec)</label>
+                        <input type="number" id="vt_rate" value="35" step="1">
+                    </div>
+                    
+                    <button class="btn" onclick="calculateVirtualTransition()">Calculate Virtual Transition</button>
+                    
+                    <div id="vt_results" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: Compound/Reverse Curves -->
+        <div id="compound-reverse" class="tab-content">
+            <h2 class="section-title">Compound & Reverse Curves</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Compound Curve -->
+                <div>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Compound Curve</h3>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>First Radius R1 (m)</label>
+                        <input type="number" id="cc_r1" value="875" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Second Radius R2 (m)</label>
+                        <input type="number" id="cc_r2" value="1200" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>First Deflection Δ1 (degrees)</label>
+                        <input type="number" id="cc_delta1" value="15" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Second Deflection Δ2 (degrees)</label>
+                        <input type="number" id="cc_delta2" value="20" step="0.01">
+                    </div>
+                    
+                    <button class="btn" onclick="calculateCompoundCurve()">Calculate Compound Curve</button>
+                    
+                    <div id="cc_results" style="display: none;"></div>
+                </div>
+
+                <!-- Reverse Curve -->
+                <div>
+                    <h3 style="color: #1e3c72; margin-bottom: 15px;">Reverse Curve</h3>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>First Radius R1 (m)</label>
+                        <input type="number" id="rc_r1" value="875" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Second Radius R2 (m)</label>
+                        <input type="number" id="rc_r2" value="875" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>First Deflection Δ1 (degrees)</label>
+                        <input type="number" id="rc_delta1" value="20" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Second Deflection Δ2 (degrees)</label>
+                        <input type="number" id="rc_delta2" value="25" step="0.01">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Transition Length (m)</label>
+                        <input type="number" id="rc_trans" value="30" step="0.01">
+                    </div>
+                    
+                    <button class="btn" onclick="calculateReverseCurve()">Calculate Reverse Curve</button>
+                    
+                    <div id="rc_results" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 6: Layout Methods -->
+        <div id="layout-methods" class="tab-content">
+            <h2 class="section-title">Curve Layout Methods</h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Radius (m)</label>
+                    <input type="number" id="lm_radius" value="875" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Deflection Angle (degrees)</label>
+                    <input type="number" id="lm_deflection" value="30" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Chord/Peg Interval (m)</label>
+                    <input type="number" id="lm_interval" value="20" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Number of Points</label>
+                    <input type="number" id="lm_points" value="10" step="1">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <button class="btn" onclick="calculateRankines()">Rankine's Method</button>
+                <button class="btn btn-secondary" onclick="calculateOffsetLongChord()">Offset from Long Chord</button>
+                <button class="btn btn-success" onclick="calculateOffsetTangent()">Offset from Tangent</button>
+            </div>
+
+            <div id="lm_results" style="display: none;"></div>
+        </div>
+
+        <!-- Tab 7: Validation & Check -->
+        <div id="validation" class="tab-content">
+            <h2 class="section-title">Design Validation & Cross-Checking</h2>
+            
+            <div class="info-box">
+                <strong>Validation Suite:</strong> Comprehensive checking against IRPWM 2025 standards
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Radius (m)</label>
+                    <input type="number" id="val_radius" value="875" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Transition Length (m)</label>
+                    <input type="number" id="val_trans" value="30" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Actual Cant (mm)</label>
+                    <input type="number" id="val_cant" value="35" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Cant Deficiency (mm)</label>
+                    <input type="number" id="val_cant_def" value="50" step="1">
+                </div>
+                <div class="form-group">
+                    <label>Design Speed (km/h)</label>
+                    <input type="number" id="val_speed" value="75" step="1">
+                </div>
+                <div class="form-group">
+                    <label>Gauge Type</label>
+                    <select id="val_gauge">
+                        <option value="BG">Broad Gauge</option>
+                        <option value="MG">Meter Gauge</option>
+                        <option value="NG">Narrow Gauge</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn" onclick="performValidation()">Perform Complete Validation</button>
+
+            <div id="val_results" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Helper functions
+        function getGaugeValue(gaugeType) {
+            const gauges = { 'BG': 1676, 'MG': 1000, 'NG': 762 };
+            return gauges[gaugeType] || 1676;
+        }
+
+        function getRateOfCant(gaugeType, trainType) {
+            const rates = {
+                'BG_PASSENGER': 35, 'BG_GOODS': 25, 'BG_SUBURBAN': 55,
+                'MG_PASSENGER': 35, 'MG_GOODS': 25, 'NG': 20
+            };
+            return rates[`${gaugeType}_${trainType}`] || 35;
+        }
+
+        function getGradientRate(gaugeType) {
+            const rates = { 'BG': 720, 'MG': 720, 'NG': 600 };
+            return rates[gaugeType] || 720;
+        }
+
+        function calculateEquilibriumCant(speed, radius, gauge) {
+            const gaugeM = gauge / 1000;
+            const cant = (gaugeM * Math.pow(speed, 2)) / (127 * radius);
+            return Math.min(cant * 1000, 165); // Max 165mm for BG
+        }
+
+        // Tab 1: Complete Curve Design
+        function designCompleteCurve() {
+            const radius = parseFloat(document.getElementById('sc_radius').value);
+            const deflection = parseFloat(document.getElementById('sc_deflection').value);
+            const speed = parseFloat(document.getElementById('sc_speed').value);
+            const gaugeType = document.getElementById('sc_gauge').value;
+            const trainType = document.getElementById('sc_train_type').value;
+            const cantDef = parseFloat(document.getElementById('sc_cant_def').value);
+
+            if (!radius || !deflection || !speed) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const gauge = getGaugeValue(gaugeType);
+            
+            // Calculate equilibrium cant
+            const eqCant = calculateEquilibriumCant(speed, radius, gauge);
+            const actualCant = Math.max(0, Math.min(eqCant - cantDef, 165));
+            
+            // Calculate transition length - THREE CONDITIONS
+            const threeConditions = calculateTransitionLength(actualCant, cantDef, speed, gaugeType, trainType);
+            const transitionLength = threeConditions.L_rounded;
+            
+            // Calculate curve elements
+            const deltaRad = deflection * Math.PI / 180;
+            const shift = Math.pow(transitionLength, 2) / (24 * radius);
+            const tangentLength = (radius + shift) * Math.tan(deltaRad / 2) + transitionLength;
+            const circularLength = radius * deltaRad;
+            const totalLength = circularLength + 2 * transitionLength;
+            const longChord = 2 * radius * Math.sin(deltaRad / 2);
+            const apexDistance = radius * (1 - Math.cos(deltaRad / 2));
+            const versine20m = Math.pow(20, 2) / (8 * radius) * 1000;
+            
+            // Validation
+            const validation = performCurveValidation(radius, transitionLength, actualCant, cantDef, speed, gaugeType, gauge);
+            
+            // Display results
+            let html = `
+                <div class="results-card">
+                    <h3>📊 Complete Curve Design Results</h3>
+                    
+                    <div class="three-conditions-box">
+                        <h4>🔍 Three Transition Length Conditions (IRPWM Mandatory)</h4>
+                        <div class="condition-row ${threeConditions.governing === 'L1' ? 'governing' : ''}">
+                            <div class="condition-label">Condition 1<br><small>Cant Deficiency</small></div>
+                            <div class="condition-formula">L₁ = (D × V) / (r × 3.6)</div>
+                            <div class="condition-value">${threeConditions.L1} m</div>
+                        </div>
+                        <div class="condition-row ${threeConditions.governing === 'L2' ? 'governing' : ''}">
+                            <div class="condition-label">Condition 2<br><small>Cant</small></div>
+                            <div class="condition-formula">L₂ = (Ca × V) / (r × 3.6)</div>
+                            <div class="condition-value">${threeConditions.L2} m</div>
+                        </div>
+                        <div class="condition-row ${threeConditions.governing === 'L3' ? 'governing' : ''}">
+                            <div class="condition-label">Condition 3<br><small>Cant Gradient</small></div>
+                            <div class="condition-formula">L₃ = Cant × (1/${threeConditions.gradient_rate})</div>
+                            <div class="condition-value">${threeConditions.L3} m</div>
+                        </div>
+                        <div style="text-align: center; margin-top: 15px; padding: 15px; background: white; border-radius: 6px;">
+                            <strong style="color: #e65100;">SELECTED: MAXIMUM = ${threeConditions.L_calculated} m → ROUNDED UP TO ${threeConditions.L_rounded} m</strong><br>
+                            <small>Governing Condition: ${threeConditions.governing} | Rate: ${threeConditions.rate} mm/sec</small>
+                        </div>
+                    </div>
+                    
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <label>Equilibrium Cant</label>
+                            <div class="value">${eqCant.toFixed(2)} mm</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Actual Cant Provided</label>
+                            <div class="value">${actualCant.toFixed(2)} mm</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Cant Deficiency</label>
+                            <div class="value">${cantDef} mm</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Transition Length</label>
+                            <div class="value">${transitionLength} m</div>
+                            <div class="sub-value">Rounded up for safety</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Circular Curve Length</label>
+                            <div class="value">${circularLength.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Total Curve Length</label>
+                            <div class="value">${totalLength.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Tangent Length</label>
+                            <div class="value">${tangentLength.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Long Chord</label>
+                            <div class="value">${longChord.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Apex Distance</label>
+                            <div class="value">${apexDistance.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Shift</label>
+                            <div class="value">${shift.toFixed(3)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Versine (20m chord)</label>
+                            <div class="value">${versine20m.toFixed(2)} mm</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Train Type</label>
+                            <div class="value" style="font-size: 1em;">${trainType}</div>
+                            <div class="sub-value">${threeConditions.rate} mm/sec</div>
+                        </div>
+                    </div>
+                    
+                    ${validation.html}
+                </div>
+            `;
+            
+            document.getElementById('sc_results').innerHTML = html;
+            document.getElementById('sc_results').style.display = 'block';
+            
+            // Store for export
+            window.currentDesign = {
+                radius, deflection, speed, gaugeType, trainType, cantDef,
+                eqCant, actualCant, transitionLength, threeConditions,
+                circularLength, totalLength, tangentLength, longChord,
+                apexDistance, shift, versine20m
+            };
+        }
+
+        function calculateTransitionLength(cant, cantDef, speed, gaugeType, trainType) {
+            const rate = getRateOfCant(gaugeType, trainType);
+            const gradientRate = getGradientRate(gaugeType);
+            const speedMps = speed / 3.6;
+            
+            // Three conditions
+            const L1 = (cantDef * speedMps) / rate;
+            const L2 = (cant * speedMps) / rate;
+            const L3 = (cant * gradientRate) / 1000;
+            
+            const Lmax = Math.max(L1, L2, L3);
+            const Lrounded = Math.ceil(Lmax);
+            
+            const governing = Lmax === L1 ? 'L1' : (Lmax === L2 ? 'L2' : 'L3');
+            
+            return {
+                L1: L1.toFixed(2),
+                L2: L2.toFixed(2),
+                L3: L3.toFixed(2),
+                L_calculated: Lmax.toFixed(2),
+                L_rounded: Lrounded,
+                governing: governing,
+                rate: rate,
+                gradient_rate: gradientRate
+            };
+        }
+
+        // Tab 2: Three Conditions
+        function calculateThreeConditions() {
+            const cant = parseFloat(document.getElementById('tc_cant').value);
+            const cantDef = parseFloat(document.getElementById('tc_cant_def').value);
+            const speed = parseFloat(document.getElementById('tc_speed').value);
+            const gaugeType = document.getElementById('tc_gauge').value;
+            const trainType = document.getElementById('tc_train').value;
+            
+            const result = calculateTransitionLength(cant, cantDef, speed, gaugeType, trainType);
+            
+            let html = `
+                <div class="results-card">
+                    <h3>🔍 Three Conditions Analysis</h3>
+                    
+                    <div class="three-conditions-box">
+                        <h4>Detailed Calculation</h4>
+                        
+                        <div class="condition-row ${result.governing === 'L1' ? 'governing' : ''}">
+                            <div class="condition-label">
+                                <strong>Condition 1</strong><br>
+                                <small>Rate of Change of Cant Deficiency</small>
+                            </div>
+                            <div class="condition-formula">
+                                L₁ = (${cantDef} × ${speed}/3.6) / ${result.rate}<br>
+                                <small>D = ${cantDef} mm, V = ${speed} km/h, r = ${result.rate} mm/sec</small>
+                            </div>
+                            <div class="condition-value">${result.L1} m</div>
+                        </div>
+                        
+                        <div class="condition-row ${result.governing === 'L2' ? 'governing' : ''}">
+                            <div class="condition-label">
+                                <strong>Condition 2</strong><br>
+                                <small>Rate of Change of Cant</small>
+                            </div>
+                            <div class="condition-formula">
+                                L₂ = (${cant} × ${speed}/3.6) / ${result.rate}<br>
+                                <small>Ca = ${cant} mm, V = ${speed} km/h, r = ${result.rate} mm/sec</small>
+                            </div>
+                            <div class="condition-value">${result.L2} m</div>
+                        </div>
+                        
+                        <div class="condition-row ${result.governing === 'L3' ? 'governing' : ''}">
+                            <div class="condition-label">
+                                <strong>Condition 3</strong><br>
+                                <small>Rate of Change of Cant Gradient</small>
+                            </div>
+                            <div class="condition-formula">
+                                L₃ = ${cant} × ${result.gradient_rate}/1000<br>
+                                <small>Cant = ${cant} mm, Gradient = 1 in ${result.gradient_rate}</small>
+                            </div>
+                            <div class="condition-value">${result.L3} m</div>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 20px; padding: 20px; background: white; border-radius: 8px; border: 2px solid #ff9800;">
+                            <h4 style="color: #e65100; margin-bottom: 10px;">FINAL TRANSITION LENGTH</h4>
+                            <div style="font-size: 1.8em; font-weight: 700; color: #e65100; margin: 10px 0;">
+                                ${result.L_rounded} m
+                            </div>
+                            <div style="color: #666;">
+                                Maximum of (${result.L1}, ${result.L2}, ${result.L3}) = ${result.L_calculated} m<br>
+                                Rounded UP to ${result.L_rounded} m<br>
+                                <strong>Governing Condition: ${result.governing}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>✓ IRPWM Requirement:</strong> All THREE conditions must be satisfied. 
+                        Always select the MAXIMUM value and round UP to ensure safety.
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('tc_results').innerHTML = html;
+            document.getElementById('tc_results').style.display = 'block';
+        }
+
+        // Tab 3: Compare Train Types
+        function compareTrainTypes() {
+            const radius = parseFloat(document.getElementById('tt_radius').value);
+            const speed = parseFloat(document.getElementById('tt_speed').value);
+            const deflection = parseFloat(document.getElementById('tt_deflection').value);
+            const cantDef = parseFloat(document.getElementById('tt_cant_def').value);
+            
+            const gauge = 1676; // BG
+            const eqCant = calculateEquilibriumCant(speed, radius, gauge);
+            const actualCant = Math.max(0, Math.min(eqCant - cantDef, 165));
+            
+            const trainTypes = ['PASSENGER', 'GOODS', 'SUBURBAN'];
+            const results = {};
+            
+            trainTypes.forEach(type => {
+                const trans = calculateTransitionLength(actualCant, cantDef, speed, 'BG', type);
+                const deltaRad = deflection * Math.PI / 180;
+                const circularLength = radius * deltaRad;
+                const totalLength = circularLength + 2 * trans.L_rounded;
+                
+                results[type] = {
+                    trans: trans,
+                    circularLength: circularLength,
+                    totalLength: totalLength
+                };
+            });
+            
+            let html = `
+                <div class="results-card">
+                    <h3>📊 Train Type Comparison</h3>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>PASSENGER<br><small>35 mm/sec</small></th>
+                                <th>GOODS<br><small>25 mm/sec</small></th>
+                                <th>SUBURBAN<br><small>55 mm/sec</small></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>L1 (Cant Deficiency)</strong></td>
+                                <td>${results.PASSENGER.trans.L1} m</td>
+                                <td>${results.GOODS.trans.L1} m</td>
+                                <td>${results.SUBURBAN.trans.L1} m</td>
+                            </tr>
+                            <tr>
+                                <td><strong>L2 (Cant)</strong></td>
+                                <td>${results.PASSENGER.trans.L2} m</td>
+                                <td>${results.GOODS.trans.L2} m</td>
+                                <td>${results.SUBURBAN.trans.L2} m</td>
+                            </tr>
+                            <tr>
+                                <td><strong>L3 (Cant Gradient)</strong></td>
+                                <td>${results.PASSENGER.trans.L3} m</td>
+                                <td>${results.GOODS.trans.L3} m</td>
+                                <td>${results.SUBURBAN.trans.L3} m</td>
+                            </tr>
+                            <tr style="background: #fff3e0;">
+                                <td><strong>Governing Condition</strong></td>
+                                <td><span class="badge badge-info">${results.PASSENGER.trans.governing}</span></td>
+                                <td><span class="badge badge-info">${results.GOODS.trans.governing}</span></td>
+                                <td><span class="badge badge-info">${results.SUBURBAN.trans.governing}</span></td>
+                            </tr>
+                            <tr style="background: #e3f2fd;">
+                                <td><strong>Transition Length</strong></td>
+                                <td><strong>${results.PASSENGER.trans.L_rounded} m</strong></td>
+                                <td><strong>${results.GOODS.trans.L_rounded} m</strong></td>
+                                <td><strong>${results.SUBURBAN.trans.L_rounded} m</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Curve Length</strong></td>
+                                <td>${results.PASSENGER.totalLength.toFixed(2)} m</td>
+                                <td>${results.GOODS.totalLength.toFixed(2)} m</td>
+                                <td>${results.SUBURBAN.totalLength.toFixed(2)} m</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="alert alert-info" style="margin-top: 20px;">
+                        <strong>Key Observation:</strong><br>
+                        • GOODS trains require LONGER transitions (slower rate = 25 mm/sec)<br>
+                        • SUBURBAN trains can use SHORTER transitions (faster rate = 55 mm/sec)<br>
+                        • For MIXED traffic, use GOODS train parameters (most conservative)
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('tt_results').innerHTML = html;
+            document.getElementById('tt_results').style.display = 'block';
+        }
+
+        // Tab 4: Reduced Transition
+        function calculateReducedTransition() {
+            const fullLength = parseFloat(document.getElementById('rt_full').value);
+            const reducedLength = parseFloat(document.getElementById('rt_reduced').value);
+            const fullCant = parseFloat(document.getElementById('rt_cant').value);
+            const speed = parseFloat(document.getElementById('rt_speed').value);
+            
+            if (reducedLength >= fullLength) {
+                alert('Reduced length must be less than full length');
+                return;
+            }
+            
+            const cantProvided = (reducedLength / fullLength) * fullCant;
+            const cantShortage = fullCant - cantProvided;
+            const speedReduced = speed * Math.sqrt(reducedLength / fullLength);
+            const speedRestriction = speed - speedReduced;
+            
+            let html = `
+                <div class="results-card" style="margin-top: 20px;">
+                    <h3>⚠️ Reduced Transition Analysis</h3>
+                    
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <label>Full Length Required</label>
+                            <div class="value">${fullLength} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Reduced Length</label>
+                            <div class="value">${reducedLength} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Cant Provided</label>
+                            <div class="value">${cantProvided.toFixed(2)} mm</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Cant Shortage</label>
+                            <div class="value">${cantShortage.toFixed(2)} mm</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Original Speed</label>
+                            <div class="value">${speed} km/h</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Permitted Speed</label>
+                            <div class="value">${speedReduced.toFixed(2)} km/h</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-danger">
+                        <strong>⚠️ SPEED RESTRICTION REQUIRED:</strong><br>
+                        Speed must be reduced by <strong>${speedRestriction.toFixed(2)} km/h</strong><br>
+                        Additional cant deficiency: ${cantShortage.toFixed(2)} mm<br>
+                        This is a PERMANENT restriction requiring signage and documentation
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <strong>Decision Required:</strong><br>
+                        <strong>Option A:</strong> Accept reduced transition with speed restriction<br>
+                        <strong>Option B:</strong> Redesign with larger radius or modify constraints
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('rt_results').innerHTML = html;
+            document.getElementById('rt_results').style.display = 'block';
+        }
+
+        // Tab 4: Virtual Transition
+        function calculateVirtualTransition() {
+            const cantRequired = parseFloat(document.getElementById('vt_cant').value);
+            const speed = parseFloat(document.getElementById('vt_speed').value);
+            const straightAvailable = parseFloat(document.getElementById('vt_straight').value);
+            const rate = parseFloat(document.getElementById('vt_rate').value);
+            
+            const speedMps = speed / 3.6;
+            const lengthRequired = (cantRequired * speedMps) / rate;
+            const virtualLength = Math.ceil(lengthRequired);
+            
+            const isValid = virtualLength <= straightAvailable;
+            
+            let html = `
+                <div class="results-card" style="margin-top: 20px;">
+                    <h3>${isValid ? '✓' : '❌'} Virtual Transition Design</h3>
+                    
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <label>Cant Required</label>
+                            <div class="value">${cantRequired} mm</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Virtual Length</label>
+                            <div class="value">${virtualLength} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Straight Available</label>
+                            <div class="value">${straightAvailable} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Remaining Straight</label>
+                            <div class="value">${isValid ? (straightAvailable - virtualLength).toFixed(2) : 'N/A'} m</div>
+                        </div>
+                    </div>
+                    
+                    ${isValid ? `
+                        <div class="alert alert-success">
+                            <strong>✓ DESIGN VALID</strong><br>
+                            Virtual transition can be provided in available straight length<br>
+                            Cant will be introduced over ${virtualLength} m of straight track<br>
+                            Curve will begin with full cant already established
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <strong>⚠️ Implementation Notes:</strong><br>
+                            • Virtual transition is a LAST RESORT solution<br>
+                            • Cant introduced in straight portion before curve<br>
+                            • No shift value (s = 0) - no physical curve<br>
+                            • Requires clear marking and extra maintenance<br>
+                            • Must be documented on drawings
+                        </div>
+                    ` : `
+                        <div class="alert alert-danger">
+                            <strong>❌ INSUFFICIENT STRAIGHT LENGTH</strong><br>
+                            Required: ${virtualLength} m<br>
+                            Available: ${straightAvailable} m<br>
+                            Shortage: ${(virtualLength - straightAvailable).toFixed(2)} m
+                        </div>
+                    `}
+                </div>
+            `;
+            
+            document.getElementById('vt_results').innerHTML = html;
+            document.getElementById('vt_results').style.display = 'block';
+        }
+
+        // Tab 5: Compound Curve
+        function calculateCompoundCurve() {
+            const R1 = parseFloat(document.getElementById('cc_r1').value);
+            const R2 = parseFloat(document.getElementById('cc_r2').value);
+            const delta1 = parseFloat(document.getElementById('cc_delta1').value);
+            const delta2 = parseFloat(document.getElementById('cc_delta2').value);
+            
+            const delta1Rad = delta1 * Math.PI / 180;
+            const delta2Rad = delta2 * Math.PI / 180;
+            
+            const T1 = R1 * Math.tan(delta1Rad / 2);
+            const T2 = R2 * Math.tan(delta2Rad / 2);
+            const L1 = R1 * delta1Rad;
+            const L2 = R2 * delta2Rad;
+            const totalLength = L1 + L2;
+            const radiusRatio = R2 / R1;
+            
+            const ratioOK = radiusRatio <= 1.5 && radiusRatio >= 1/1.5;
+            
+            let html = `
+                <div class="results-card" style="margin-top: 20px;">
+                    <h3>📐 Compound Curve Elements</h3>
+                    
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <label>First Curve Length (L1)</label>
+                            <div class="value">${L1.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Second Curve Length (L2)</label>
+                            <div class="value">${L2.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Total Length</label>
+                            <div class="value">${totalLength.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Tangent T1</label>
+                            <div class="value">${T1.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Tangent T2</label>
+                            <div class="value">${T2.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Radius Ratio (R2/R1)</label>
+                            <div class="value">${radiusRatio.toFixed(3)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert ${ratioOK ? 'alert-success' : 'alert-danger'}">
+                        <strong>${ratioOK ? '✓' : '❌'} Radius Ratio Check:</strong><br>
+                        R2/R1 = ${radiusRatio.toFixed(3)}<br>
+                        IRPWM Limit: Maximum 1:1.5<br>
+                        ${ratioOK ? 'Ratio is within acceptable limits' : 'Ratio EXCEEDS IRPWM limit - redesign required'}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('cc_results').innerHTML = html;
+            document.getElementById('cc_results').style.display = 'block';
+        }
+
+        // Tab 5: Reverse Curve
+        function calculateReverseCurve() {
+            const R1 = parseFloat(document.getElementById('rc_r1').value);
+            const R2 = parseFloat(document.getElementById('rc_r2').value);
+            const delta1 = parseFloat(document.getElementById('rc_delta1').value);
+            const delta2 = parseFloat(document.getElementById('rc_delta2').value);
+            const transLength = parseFloat(document.getElementById('rc_trans').value);
+            
+            const delta1Rad = delta1 * Math.PI / 180;
+            const delta2Rad = delta2 * Math.PI / 180;
+            
+            const L1 = R1 * delta1Rad;
+            const L2 = R2 * delta2Rad;
+            const minStraight = transLength > 0 ? 2 * transLength : 30;
+            const totalLength = L1 + L2 + 2 * transLength + minStraight;
+            
+            let html = `
+                <div class="results-card" style="margin-top: 20px;">
+                    <h3>↔️ Reverse Curve Elements</h3>
+                    
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <label>First Curve (L1)</label>
+                            <div class="value">${L1.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Second Curve (L2)</label>
+                            <div class="value">${L2.toFixed(2)} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Min Straight Between</label>
+                            <div class="value">${minStraight} m</div>
+                        </div>
+                        <div class="result-item">
+                            <label>Total Length</label>
+                            <div class="value">${totalLength.toFixed(2)} m</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <strong>⚠️ IRPWM Requirement:</strong><br>
+                        Minimum straight between reverse curves: ${minStraight} m<br>
+                        Cant must be brought to zero between curves
+                    </div>
+                    
+                    <div class="alert alert-danger">
+                        <strong>⚠️ WARNING:</strong><br>
+                        • Reverse curves cause rapid weight shift<br>
+                        • Uncomfortable for passengers<br>
+                        • Stressful on track structure<br>
+                        • <strong>AVOID WHENEVER POSSIBLE</strong>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('rc_results').innerHTML = html;
+            document.getElementById('rc_results').style.display = 'block';
+        }
+
+        // Tab 6: Rankine's Method
+        function calculateRankines() {
+            const radius = parseFloat(document.getElementById('lm_radius').value);
+            const deflection = parseFloat(document.getElementById('lm_deflection').value);
+            const interval = parseFloat(document.getElementById('lm_interval').value);
+            
+            const deltaRad = deflection * Math.PI / 180;
+            const curveLength = radius * deltaRad;
+            const numChords = Math.ceil(curveLength / interval);
+            const actualChord = curveLength / numChords;
+            const deflectionPerChord = (actualChord * 28.648) / radius;
+            
+            let html = `
+                <div class="results-card">
+                    <h3>📐 Rankine's Method of Tangential Angles</h3>
+                    
+                    <div class="info-box">
+                        <strong>Method:</strong> Most commonly used for setting out railway curves<br>
+                        <strong>Deflection per chord:</strong> ${deflectionPerChord.toFixed(4)}°
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Station</th>
+                                <th>Chainage (m)</th>
+                                <th>Deflection (°)</th>
+                                <th>Cumulative (°)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            let cumulative = 0;
+            for (let i = 0; i <= Math.min(numChords, 15); i++) {
+                const chainage = i * actualChord;
+                const deflection = i === 0 ? 0 : deflectionPerChord;
+                cumulative = i * deflectionPerChord;
+                
+                html += `
+                    <tr>
+                        <td>${i === 0 ? 'T1' : 'Peg ' + i}</td>
+                        <td>${chainage.toFixed(2)}</td>
+                        <td>${deflection.toFixed(4)}</td>
+                        <td>${cumulative.toFixed(4)}</td>
+                    </tr>
+                `;
+            }
+            
+            if (numChords > 15) {
+                html += `<tr><td colspan="4" style="text-align: center;">... ${numChords - 15} more points ...</td></tr>`;
+            }
+            
+            html += `
+                        </tbody>
+                    </table>
+                    
+                    <div class="alert alert-info">
+                        <strong>Field Procedure:</strong><br>
+                        1. Set theodolite at T1, bisect back tangent<br>
+                        2. For each point, set cumulative deflection angle<br>
+                        3. Measure chord length and mark point<br>
+                        4. Check: Final deflection should equal Δ/2 = ${(deflection/2).toFixed(2)}°
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('lm_results').innerHTML = html;
+            document.getElementById('lm_results').style.display = 'block';
+        }
+
+        // Tab 6: Offset from Long Chord
+        function calculateOffsetLongChord() {
+            const radius = parseFloat(document.getElementById('lm_radius').value);
+            const deflection = parseFloat(document.getElementById('lm_deflection').value);
+            const numOffsets = parseInt(document.getElementById('lm_points').value);
+            
+            const deltaRad = deflection * Math.PI / 180;
+            const longChord = 2 * radius * Math.sin(deltaRad / 2);
+            const versedSine = radius * (1 - Math.cos(deltaRad / 2));
+            const interval = longChord / numOffsets;
+            
+            let html = `
+                <div class="results-card">
+                    <h3>📏 Offset from Long Chord Method</h3>
+                    
+                    <div class="info-box">
+                        <strong>Long Chord:</strong> ${longChord.toFixed(2)} m<br>
+                        <strong>Versed Sine:</strong> ${versedSine.toFixed(3)} m (maximum offset at center)
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Point</th>
+                                <th>Distance along Chord (m)</th>
+                                <th>Offset from Chord (m)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            for (let i = 0; i <= numOffsets; i++) {
+                const x = i * interval;
+                const xFromCenter = longChord / 2 - x;
+                const offset = radius ** 2 >= xFromCenter ** 2 ? 
+                              radius - Math.sqrt(radius ** 2 - xFromCenter ** 2) : 0;
+                
+                html += `
+                    <tr>
+                        <td>${i}</td>
+                        <td>${x.toFixed(2)}</td>
+                        <td>${offset.toFixed(3)}</td>
+                    </tr>
+                `;
+            }
+            
+            html += `
+                        </tbody>
+                    </table>
+                    
+                    <div class="alert alert-info">
+                        <strong>Field Procedure:</strong><br>
+                        1. Measure and mark long chord<br>
+                        2. Divide into equal intervals<br>
+                        3. Measure perpendicular offsets from chord<br>
+                        4. Maximum offset at center = Versed Sine
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('lm_results').innerHTML = html;
+            document.getElementById('lm_results').style.display = 'block';
+        }
+
+        // Tab 6: Offset from Tangent
+        function calculateOffsetTangent() {
+            const radius = parseFloat(document.getElementById('lm_radius').value);
+            const deflection = parseFloat(document.getElementById('lm_deflection').value);
+            const interval = parseFloat(document.getElementById('lm_interval').value);
+            
+            const deltaRad = deflection * Math.PI / 180;
+            const curveLength = radius * deltaRad;
+            const numPoints = Math.ceil(curveLength / interval);
+            
+            let html = `
+                <div class="results-card">
+                    <h3>📊 Offset from Tangent (Tacheometric Method)</h3>
+                    
+                    <div class="info-box">
+                        <strong>Method:</strong> Coordinate-based, suitable for total stations<br>
+                        <strong>Curve Length:</strong> ${curveLength.toFixed(2)} m
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Station</th>
+                                <th>Chainage (m)</th>
+                                <th>X (along tangent)</th>
+                                <th>Y (perpendicular)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            for (let i = 0; i <= Math.min(numPoints, 15); i++) {
+                const chainage = i * interval;
+                const l = chainage;
+                
+                const x = radius * Math.sin(l / radius);
+                const y = radius * (1 - Math.cos(l / radius));
+                
+                html += `
+                    <tr>
+                        <td>${i}</td>
+                        <td>${chainage.toFixed(2)}</td>
+                        <td>${x.toFixed(3)}</td>
+                        <td>${y.toFixed(3)}</td>
+                    </tr>
+                `;
+            }
+            
+            if (numPoints > 15) {
+                html += `<tr><td colspan="4" style="text-align: center;">... ${numPoints - 15} more points ...</td></tr>`;
+            }
+            
+            html += `
+                        </tbody>
+                    </table>
+                    
+                    <div class="alert alert-info">
+                        <strong>Formulas:</strong><br>
+                        X (along tangent) = R × sin(l/R)<br>
+                        Y (perpendicular) = R × (1 - cos(l/R))<br>
+                        where l = length along curve from tangent point
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('lm_results').innerHTML = html;
+            document.getElementById('lm_results').style.display = 'block';
+        }
+
+        // Tab 7: Validation
+        function performValidation() {
+            const radius = parseFloat(document.getElementById('val_radius').value);
+            const transLength = parseFloat(document.getElementById('val_trans').value);
+            const cant = parseFloat(document.getElementById('val_cant').value);
+            const cantDef = parseFloat(document.getElementById('val_cant_def').value);
+            const speed = parseFloat(document.getElementById('val_speed').value);
+            const gaugeType = document.getElementById('val_gauge').value;
+            const gauge = getGaugeValue(gaugeType);
+            
+            const validation = performCurveValidation(radius, transLength, cant, cantDef, speed, gaugeType, gauge);
+            
+            let html = `
+                <div class="results-card">
+                    <h3>✓ Design Validation Report</h3>
+                    ${validation.html}
+                </div>
+            `;
+            
+            document.getElementById('val_results').innerHTML = html;
+            document.getElementById('val_results').style.display = 'block';
+        }
+
+        function performCurveValidation(radius, transLength, cant, cantDef, speed, gaugeType, gauge) {
+            // Check 1: Transition length
+            const Lt1 = 0.008 * speed ** 2 / radius;
+            const Lt2 = cant * 0.72;
+            const Lt3 = (cant * speed / 3.6) / 35;
+            const LtRequired = Math.max(Lt1, Lt2, Lt3);
+            const transOK = transLength >= LtRequired;
+            
+            // Check 2: Cant deficiency
+            const maxCantDef = gaugeType === 'BG' ? 75 : (gaugeType === 'MG' ? 65 : 50);
+            const cantDefOK = cantDef <= maxCantDef;
+            
+            // Check 3: Maximum speed
+            const gaugeM = gauge / 1000;
+            const totalCantM = (cant + cantDef) / 1000;
+            const Vmax = Math.sqrt((127 * radius * totalCantM) / gaugeM);
+            
+            const overallStatus = transOK && cantDefOK ? 'PASS' : 'FAIL';
+            
+            let html = `
+                <div class="alert ${overallStatus === 'PASS' ? 'alert-success' : 'alert-danger'}">
+                    <strong>Overall Status: ${overallStatus}</strong>
+                    <span class="badge ${overallStatus === 'PASS' ? 'badge-pass' : 'badge-fail'}">${overallStatus}</span>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Check</th>
+                            <th>Result</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1. Transition Length</strong></td>
+                            <td>
+                                Provided: ${transLength} m<br>
+                                Required: ${LtRequired.toFixed(2)} m<br>
+                                <small>L1=${Lt1.toFixed(2)}m, L2=${Lt2.toFixed(2)}m, L3=${Lt3.toFixed(2)}m</small>
+                            </td>
+                            <td><span class="badge ${transOK ? 'badge-pass' : 'badge-fail'}">${transOK ? 'PASS' : 'FAIL'}</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>2. Cant Deficiency</strong></td>
+                            <td>
+                                Provided: ${cantDef} mm<br>
+                                Maximum: ${maxCantDef} mm<br>
+                                Utilization: ${((cantDef/maxCantDef)*100).toFixed(1)}%
+                            </td>
+                            <td><span class="badge ${cantDefOK ? 'badge-pass' : 'badge-fail'}">${cantDefOK ? 'PASS' : 'FAIL'}</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>3. Maximum Speed</strong></td>
+                            <td>
+                                Design Speed: ${speed} km/h<br>
+                                Max Permissible: ${Vmax.toFixed(2)} km/h<br>
+                                ${speed <= Vmax ? 'Speed is within limits' : 'Speed EXCEEDS limit'}
+                            </td>
+                            <td><span class="badge badge-info">INFO</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+            
+            return { html: html, status: overallStatus };
+        }
+
+        // Export Report
+        function exportReport() {
+            if (!window.currentDesign) {
+                alert('Please design a curve first');
+                return;
+            }
+            
+            const d = window.currentDesign;
+            const report = `
+================================================================================
+COMPREHENSIVE HORIZONTAL CURVE DESIGN REPORT
+Based on IRPWM 2025 Standards
+================================================================================
+Generated: ${new Date().toLocaleString()}
+
+DESIGN PARAMETERS:
+--------------------------------------------------------------------------------
+  Radius (R)                : ${d.radius} m
+  Deflection Angle (Δ)      : ${d.deflection}°
+  Design Speed (V)          : ${d.speed} km/h
+  Gauge Type                : ${d.gaugeType}
+  Train Type                : ${d.trainType}
+
+SUPERELEVATION (CANT):
+--------------------------------------------------------------------------------
+  Equilibrium Cant          : ${d.eqCant.toFixed(2)} mm
+  Cant Deficiency           : ${d.cantDef} mm
+  Actual Cant Provided      : ${d.actualCant.toFixed(2)} mm
+
+THREE TRANSITION LENGTH CONDITIONS:
+--------------------------------------------------------------------------------
+  Condition 1 (Cant Deficiency) : ${d.threeConditions.L1} m
+    Rate: ${d.threeConditions.rate} mm/sec
+  Condition 2 (Cant)            : ${d.threeConditions.L2} m
+    Rate: ${d.threeConditions.rate} mm/sec
+  Condition 3 (Cant Gradient)   : ${d.threeConditions.L3} m
+    Gradient: 1 in ${d.threeConditions.gradient_rate}
+  
+  Calculated Length             : ${d.threeConditions.L_calculated} m
+  Rounded Up (Provided)         : ${d.threeConditions.L_rounded} m
+  Governing Condition           : ${d.threeConditions.governing}
+
+CURVE ELEMENTS:
+--------------------------------------------------------------------------------
+  Tangent Length (T)        : ${d.tangentLength.toFixed(2)} m
+  Circular Curve Length     : ${d.circularLength.toFixed(2)} m
+  Total Curve Length        : ${d.totalLength.toFixed(2)} m
+  Long Chord (LC)           : ${d.longChord.toFixed(2)} m
+  Apex Distance             : ${d.apexDistance.toFixed(2)} m
+  Shift (s)                 : ${d.shift.toFixed(3)} m
+  Versine (20m chord)       : ${d.versine20m.toFixed(2)} mm
+
+================================================================================
+            `.trim();
+            
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `curve_design_R${d.radius}_V${d.speed}_${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
