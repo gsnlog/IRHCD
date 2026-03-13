@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <meta charset="UTF-8">
-<title>Railway Horizontal Curve Designer</title>
+<title>Railway Curve Designer</title>
 
 <style>
 
 body{
 font-family:Segoe UI;
-background:#f5f7fb;
+background:#f3f5f8;
 margin:0;
 }
 
@@ -20,36 +22,36 @@ font-size:22px;
 }
 
 .container{
-padding:20px;
-max-width:1200px;
+max-width:1300px;
 margin:auto;
+padding:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
+gap:20px;
 }
 
 .card{
 background:white;
 padding:20px;
-margin-bottom:20px;
 border-radius:10px;
 box-shadow:0 4px 10px rgba(0,0,0,0.1);
 }
 
-h2{
-margin-top:0;
-color:#2c3e50;
-}
-
 input{
 padding:6px;
-margin:4px;
+margin:5px;
 width:120px;
 }
 
 button{
-padding:8px 15px;
+padding:7px 15px;
 background:#3498db;
 border:none;
 color:white;
-border-radius:5px;
+border-radius:6px;
 cursor:pointer;
 }
 
@@ -57,257 +59,323 @@ button:hover{
 background:#2980b9;
 }
 
-.result{
-margin-top:10px;
-font-weight:bold;
-color:#27ae60;
+canvas{
+background:white;
+border:1px solid #ccc;
 }
 
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-gap:20px;
+table{
+border-collapse:collapse;
+width:100%;
+}
+
+td,th{
+border:1px solid #ccc;
+padding:4px;
+font-size:13px;
+text-align:center;
 }
 
 </style>
+
 </head>
+
 
 <body>
 
 <header>
-Horizontal Curve Designer – Indian Railway
+Railway Horizontal Curve Designer (Indian Railway)
 </header>
+
 
 <div class="container">
 
 <div class="grid">
 
-<div class="card">
-<h2>Radius from Versine</h2>
-
-Chord C (m)<br>
-<input id="c"><br>
-
-Versine V (mm)<br>
-<input id="v"><br>
-
-<button onclick="calcRadius()">Calculate</button>
-
-<div class="result" id="radius"></div>
-</div>
-
+<!-- INTERACTIVE CURVE -->
 
 <div class="card">
-<h2>Degree of Curve</h2>
 
-Radius R (m)<br>
-<input id="deg_r"><br>
+<h3>Interactive Curve Diagram</h3>
 
-<button onclick="calcDegree()">Calculate</button>
+Radius (m)
+<input id="r">
 
-<div class="result" id="degree"></div>
+Transition (m)
+<input id="t">
+
+<button onclick="drawCurve()">Draw</button>
+
+<canvas id="curveCanvas" width="400" height="200"></canvas>
+
 </div>
 
+
+
+<!-- VERSINE TABLE -->
 
 <div class="card">
-<h2>Equilibrium Cant</h2>
 
-Speed V (km/h)<br>
-<input id="cant_v"><br>
+<h3>Versine Table Generator</h3>
 
-Radius R (m)<br>
-<input id="cant_r"><br>
+Radius (m)
+<input id="vr">
 
-Gauge G (mm)<br>
-<input id="cant_g" value="1750"><br>
+<button onclick="versineTable()">Generate</button>
 
-<button onclick="calcCant()">Calculate</button>
+<div id="versine"></div>
 
-<div class="result" id="cant"></div>
 </div>
 
+
+
+<!-- TRANSITION TABLE -->
 
 <div class="card">
-<h2>Maximum Permissible Speed</h2>
 
-Radius R (m)<br>
-<input id="speed_r"><br>
+<h3>Transition Setting-Out Table</h3>
 
-Cant Ca (mm)<br>
-<input id="speed_ca"><br>
+Transition L (m)
+<input id="tl">
 
-Cant Deficiency Cd (mm)<br>
-<input id="speed_cd"><br>
+Radius R (m)
+<input id="tr">
 
-<button onclick="calcSpeed()">Calculate</button>
+<button onclick="transitionTable()">Generate</button>
 
-<div class="result" id="speed"></div>
+<div id="transitionTable"></div>
+
 </div>
 
+
+
+<!-- CANT DIAGRAM -->
 
 <div class="card">
-<h2>Transition Length</h2>
 
-Cant Ca (mm)<br>
-<input id="tr_ca"><br>
+<h3>Cant Diagram</h3>
 
-Cant Deficiency Cd (mm)<br>
-<input id="tr_cd"><br>
+Cant (mm)
+<input id="cant">
 
-Max Speed Vm (km/h)<br>
-<input id="tr_vm"><br>
+Transition Length
+<input id="cantL">
 
-<button onclick="calcTransition()">Calculate</button>
+<button onclick="drawCant()">Plot</button>
 
-<div class="result" id="transition"></div>
+<canvas id="cantCanvas" width="400" height="200"></canvas>
+
 </div>
 
+
+
+<!-- REVERSE CURVE -->
 
 <div class="card">
-<h2>Shift</h2>
 
-Transition L (m)<br>
-<input id="shift_l"><br>
+<h3>Reverse Curve Designer</h3>
 
-Radius R (m)<br>
-<input id="shift_r"><br>
+Ca1
+<input id="ca1">
 
-<button onclick="calcShift()">Calculate</button>
+Ca2
+<input id="ca2">
 
-<div class="result" id="shift"></div>
+Vm
+<input id="vm">
+
+<button onclick="reverseCurve()">Calculate</button>
+
+<div id="reverseResult"></div>
+
 </div>
 
+
+
+<!-- COMPOUND CURVE -->
 
 <div class="card">
-<h2>Transition Offset</h2>
 
-Distance X (m)<br>
-<input id="off_x"><br>
+<h3>Compound Curve Designer</h3>
 
-Transition L (m)<br>
-<input id="off_l"><br>
+Ca1
+<input id="cca1">
 
-Radius R (m)<br>
-<input id="off_r"><br>
+Ca2
+<input id="cca2">
 
-<button onclick="calcOffset()">Calculate</button>
+Vm
+<input id="cvm">
 
-<div class="result" id="offset"></div>
+<button onclick="compoundCurve()">Calculate</button>
+
+<div id="compoundResult"></div>
+
 </div>
 
+
+
+<!-- TURNOUT ON CURVE -->
 
 <div class="card">
-<h2>Gradient Compensation</h2>
 
-Radius R (m)<br>
-<input id="grad_r"><br>
+<h3>Turnout on Curve</h3>
 
-<button onclick="calcGrad()">Calculate</button>
+Main Radius
+<input id="mr">
 
-<div class="result" id="grad"></div>
+Turnout Radius
+<input id="trr">
+
+<button onclick="turnout()">Calculate</button>
+
+<div id="turnoutResult"></div>
+
 </div>
 
 
 </div>
+
 </div>
 
 
 <script>
 
-function calcRadius(){
-c=parseFloat(document.getElementById("c").value)
-v=parseFloat(document.getElementById("v").value)
 
-r=125*c*c/v
+function drawCurve(){
 
-document.getElementById("radius").innerHTML="Radius = "+r.toFixed(2)+" m"
-}
+r=parseFloat(document.getElementById("r").value)
+t=parseFloat(document.getElementById("t").value)
 
+canvas=document.getElementById("curveCanvas")
+ctx=canvas.getContext("2d")
 
-function calcDegree(){
-r=parseFloat(document.getElementById("deg_r").value)
+ctx.clearRect(0,0,400,200)
 
-d=1750/r
+ctx.beginPath()
 
-document.getElementById("degree").innerHTML="Degree = "+d.toFixed(3)+"°"
-}
+ctx.moveTo(20,150)
 
+ctx.lineTo(120,150)
 
-function calcCant(){
+ctx.quadraticCurveTo(200,50,300,150)
 
-v=parseFloat(document.getElementById("cant_v").value)
-r=parseFloat(document.getElementById("cant_r").value)
-g=parseFloat(document.getElementById("cant_g").value)
+ctx.lineTo(380,150)
 
-c=(v*v*g)/(127*r)
-
-document.getElementById("cant").innerHTML="Cant = "+c.toFixed(2)+" mm"
+ctx.stroke()
 
 }
 
 
-function calcSpeed(){
 
-r=parseFloat(document.getElementById("speed_r").value)
-ca=parseFloat(document.getElementById("speed_ca").value)
-cd=parseFloat(document.getElementById("speed_cd").value)
+function versineTable(){
 
-v=Math.sqrt((ca+cd)*r*0.27)
+r=parseFloat(document.getElementById("vr").value)
 
-document.getElementById("speed").innerHTML="Speed = "+v.toFixed(2)+" km/h"
+html="<table><tr><th>Station</th><th>Versine mm</th></tr>"
+
+for(i=10;i<=200;i+=10){
+
+v=(1000*(20*20))/(8*r)
+
+html+="<tr><td>"+i+"</td><td>"+v.toFixed(2)+"</td></tr>"
+
+}
+
+html+="</table>"
+
+document.getElementById("versine").innerHTML=html
 
 }
 
 
-function calcTransition(){
 
-ca=parseFloat(document.getElementById("tr_ca").value)
-cd=parseFloat(document.getElementById("tr_cd").value)
-vm=parseFloat(document.getElementById("tr_vm").value)
+function transitionTable(){
 
-l1=0.0056*ca*vm
-l2=0.0056*cd*vm
-l3=0.72*ca
+L=parseFloat(document.getElementById("tl").value)
+R=parseFloat(document.getElementById("tr").value)
 
-l=Math.max(l1,l2,l3)
+html="<table><tr><th>X</th><th>Y offset</th></tr>"
 
-document.getElementById("transition").innerHTML="Transition Length = "+l.toFixed(2)+" m"
+for(x=5;x<=L;x+=5){
+
+y=(x*x*x)/(6*R*L)
+
+html+="<tr><td>"+x+"</td><td>"+y.toFixed(3)+"</td></tr>"
+
+}
+
+html+="</table>"
+
+document.getElementById("transitionTable").innerHTML=html
 
 }
 
 
-function calcShift(){
 
-l=parseFloat(document.getElementById("shift_l").value)
-r=parseFloat(document.getElementById("shift_r").value)
+function drawCant(){
 
-s=(l*l)/(24*r)
+cant=parseFloat(document.getElementById("cant").value)
+L=parseFloat(document.getElementById("cantL").value)
 
-document.getElementById("shift").innerHTML="Shift = "+s.toFixed(4)+" m"
+canvas=document.getElementById("cantCanvas")
+ctx=canvas.getContext("2d")
+
+ctx.clearRect(0,0,400,200)
+
+ctx.beginPath()
+
+ctx.moveTo(20,180)
+
+ctx.lineTo(200,20)
+
+ctx.lineTo(380,20)
+
+ctx.stroke()
 
 }
 
 
-function calcOffset(){
 
-x=parseFloat(document.getElementById("off_x").value)
-l=parseFloat(document.getElementById("off_l").value)
-r=parseFloat(document.getElementById("off_r").value)
+function reverseCurve(){
 
-y=(x*x*x)/(6*r*l)
+ca1=parseFloat(document.getElementById("ca1").value)
+ca2=parseFloat(document.getElementById("ca2").value)
+vm=parseFloat(document.getElementById("vm").value)
 
-document.getElementById("offset").innerHTML="Offset = "+y.toFixed(4)+" m"
+L=0.0056*(ca1+ca2)*vm
+
+document.getElementById("reverseResult").innerHTML=
+"Transition Length = "+L.toFixed(2)+" m"
 
 }
 
 
-function calcGrad(){
 
-r=parseFloat(document.getElementById("grad_r").value)
+function compoundCurve(){
 
-g=70/r
+ca1=parseFloat(document.getElementById("cca1").value)
+ca2=parseFloat(document.getElementById("cca2").value)
+vm=parseFloat(document.getElementById("cvm").value)
 
-document.getElementById("grad").innerHTML="Gradient Compensation = "+g.toFixed(4)+" %"
+L=0.0056*(ca1-ca2)*vm
+
+document.getElementById("compoundResult").innerHTML=
+"Transition Length = "+Math.abs(L).toFixed(2)+" m"
+
+}
+
+
+
+function turnout(){
+
+mr=parseFloat(document.getElementById("mr").value)
+tr=parseFloat(document.getElementById("trr").value)
+
+res=(mr*tr)/(mr+tr)
+
+document.getElementById("turnoutResult").innerHTML=
+"Resultant Radius ≈ "+res.toFixed(2)+" m"
 
 }
 
