@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta charset="UTF-8">
@@ -11,21 +12,21 @@
 
 body{
 font-family:Segoe UI,Arial;
-background:#f3f5f9;
 margin:0;
+background:#eef2f7;
 }
 
 header{
-background:#1f3a60;
+background:#1e3a5f;
 color:white;
-padding:14px 20px;
+padding:15px;
 font-size:20px;
 }
 
 .container{
 padding:20px;
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
 gap:20px;
 }
 
@@ -33,28 +34,28 @@ gap:20px;
 background:white;
 padding:18px;
 border-radius:10px;
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
 }
 
 h3{
 margin-top:0;
-color:#1f3a60;
+color:#1e3a5f;
 }
 
 .row{
 display:flex;
 justify-content:space-between;
-margin-bottom:8px;
+margin-bottom:10px;
 gap:10px;
 }
 
 input,select{
 padding:6px;
-width:120px;
+width:130px;
 }
 
 input[readonly]{
-background:#eef1f6;
+background:#f0f3f8;
 }
 
 .error{
@@ -68,18 +69,24 @@ font-size:13px;
 }
 
 .steps{
-font-family:Consolas;
-font-size:13px;
 background:#fafafa;
 padding:10px;
 border-radius:6px;
+font-family:Consolas;
+font-size:13px;
 white-space:pre-line;
+}
+
+canvas{
+width:100%;
+height:220px;
+border:1px solid #ccc;
+border-radius:6px;
 }
 
 </style>
 
 </head>
-
 
 <body>
 
@@ -89,7 +96,7 @@ Railway Horizontal Curve Designer
 
 <div class="container">
 
-<!-- INPUTS -->
+<!-- PARAMETERS -->
 
 <div class="card">
 
@@ -97,7 +104,6 @@ Railway Horizontal Curve Designer
 
 <div class="row">
 <label>Gauge</label>
-
 <select id="gauge">
 <option value="1750">BG</option>
 <option value="1000">MG</option>
@@ -107,7 +113,6 @@ Railway Horizontal Curve Designer
 
 <div class="row">
 <label>Route Group</label>
-
 <select id="group">
 <option>A</option>
 <option>B</option>
@@ -120,6 +125,7 @@ Railway Horizontal Curve Designer
 </div>
 
 
+<!-- GEOMETRY -->
 
 <div class="card">
 
@@ -150,28 +156,30 @@ Railway Horizontal Curve Designer
 </div>
 
 
+<!-- SPEED -->
 
 <div class="card">
 
-<h3>Speed</h3>
+<h3>Speed Inputs</h3>
 
 <div class="row">
-<label>Vmax km/h</label>
+<label>Vmax</label>
 <input id="vmax">
 </div>
 
 <div class="row">
-<label>Vmin km/h</label>
+<label>Vmin</label>
 <input id="vmin">
 </div>
 
 </div>
 
 
+<!-- CANT -->
 
 <div class="card">
 
-<h3>Cant Results</h3>
+<h3>Cant Design</h3>
 
 <div class="row">
 <label>Eq Cant Vmax</label>
@@ -203,42 +211,62 @@ Railway Horizontal Curve Designer
 </div>
 
 
+<!-- SPEED RESULT -->
 
 <div class="card">
 
 <h3>Speed Result</h3>
 
 <div class="row">
-<label>Maximum Speed</label>
+<label>Max Speed</label>
 <input id="speed" readonly>
 </div>
 
 </div>
 
 
+<!-- STEPS -->
 
 <div class="card">
 
 <h3>Calculation Steps</h3>
 
-<div class="steps" id="steps"></div>
+<div id="steps" class="steps"></div>
+
+</div>
+
+
+<!-- CURVE GRAPH -->
+
+<div class="card">
+
+<h3>Curve Diagram</h3>
+
+<canvas id="curveChart"></canvas>
+
+</div>
+
+
+<!-- CANT GRAPH -->
+
+<div class="card">
+
+<h3>Cant Diagram</h3>
+
+<canvas id="cantChart"></canvas>
 
 </div>
 
 
 </div>
-
 
 
 <script>
 
+const inputs=["radius","degree","versine","vmax","vmin","cant_provided"]
 
-const fields=["radius","degree","versine","vmax","vmin","cant_provided"]
-
-fields.forEach(id=>{
-
+inputs.forEach(id=>{
 document.getElementById(id).addEventListener("input",calculate)
-
 })
 
 
@@ -249,110 +277,97 @@ let V=parseFloat(versine.value)
 let C=parseFloat(chord.value)
 let vmax_val=parseFloat(vmax.value)
 let vmin_val=parseFloat(vmin.value)
-let gauge=parseFloat(gauge_select())
-let group=document.getElementById("group").value
 
-let step_text=""
+let G=parseFloat(gauge.value)
+let group_val=group.value
+
+let steps_txt=""
 
 geometry_error.innerHTML=""
 cant_warning.innerHTML=""
 
 
+/* radius from versine */
 
 if(!R && V){
 
 R=(125*C*C)/V
 radius.value=R.toFixed(2)
 
-step_text+=`
-Radius from versine
-
+steps_txt+=`
 R = 125 C² / V
 R = 125 × ${C}² / ${V}
-
 R = ${R.toFixed(2)} m
 `
+
 }
 
 
+/* versine */
 
 if(R && !V){
 
 V=(125*C*C)/R
 versine.value=V.toFixed(2)
 
-step_text+=`
-Versine from radius
+steps_txt+=`
 
 V = 125 C² / R
-
 V = ${V.toFixed(2)} mm
 `
+
 }
 
 
+/* degree */
 
 if(R){
 
 let D=1750/R
 degree.value=D.toFixed(3)
 
-step_text+=`
-
-Degree of curve
-
-D = 1750 / R
-
-D = ${D.toFixed(3)}°
-`
-
 }
 
 
+/* cant */
 
 if(R && vmax_val){
 
-let cant1=(vmax_val*vmax_val*gauge)/(127*R)
+let cant1=(vmax_val*vmax_val*G)/(127*R)
 
 cant_vmax.value=cant1.toFixed(2)
 
-step_text+=`
-
-Cant for Vmax
+steps_txt+=`
 
 C = V²G / 127R
-
-C = (${vmax_val}² × ${gauge}) / (127 × ${R})
-
+C = (${vmax_val}² × ${G}) / (127 × ${R})
 C = ${cant1.toFixed(2)} mm
 `
 
 }
 
 
-
 if(R && vmin_val){
 
-let cant2=(vmin_val*vmin_val*gauge)/(127*R)
-
+let cant2=(vmin_val*vmin_val*G)/(127*R)
 cant_vmin.value=cant2.toFixed(2)
 
 }
 
 
+/* max cant */
 
-let maxcant=(group=="A"||group=="B")?185:165
-
+let maxcant=(group_val=="A"||group_val=="B")?185:165
 cant_max.value=maxcant
 
 
+/* cant deficiency */
 
 let provided=parseFloat(cant_provided.value)
 
 if(provided){
 
-let deficiency=(cant_vmax.value-provided)
-
+let deficiency=cant_vmax.value-provided
 cant_def.value=deficiency.toFixed(2)
 
 if(deficiency>100){
@@ -364,31 +379,67 @@ cant_warning.innerHTML="Cant deficiency exceeds 100 mm"
 }
 
 
+/* speed */
 
 if(R && provided){
 
-let speed_calc=Math.sqrt((provided+100)*R*0.27)
-
-speed.value=speed_calc.toFixed(2)
-
-}
-
-
-
-steps.innerText=step_text
+let sp=Math.sqrt((provided+100)*R*0.27)
+speed.value=sp.toFixed(2)
 
 }
 
 
+steps.innerText=steps_txt
 
-function gauge_select(){
+drawCurve()
+drawCant()
 
-return document.getElementById("gauge").value
+}
+
+
+/* curve diagram */
+
+function drawCurve(){
+
+let canvas=document.getElementById("curveChart")
+let ctx=canvas.getContext("2d")
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+ctx.beginPath()
+
+ctx.moveTo(10,150)
+ctx.lineTo(120,150)
+ctx.quadraticCurveTo(220,20,340,150)
+ctx.lineTo(460,150)
+
+ctx.stroke()
+
+}
+
+
+/* cant graph */
+
+function drawCant(){
+
+let canvas=document.getElementById("cantChart")
+let ctx=canvas.getContext("2d")
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+ctx.beginPath()
+
+ctx.moveTo(10,170)
+ctx.lineTo(200,40)
+ctx.lineTo(400,40)
+ctx.lineTo(580,170)
+
+ctx.stroke()
 
 }
 
 </script>
 
-
 </body>
+
 </html>
