@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Horizontal Curve Designer</title>
+<title>Horizontal Curve Engineering Tool</title>
 
 <style>
 
 body{
-font-family:Segoe UI,Arial;
+font-family:Segoe UI;
 margin:0;
 background:#eef2f7;
 }
@@ -19,7 +18,7 @@ background:#eef2f7;
 header{
 background:#1e3a5f;
 color:white;
-padding:15px;
+padding:14px;
 font-size:20px;
 }
 
@@ -32,98 +31,59 @@ gap:20px;
 
 .card{
 background:white;
-padding:18px;
+padding:16px;
 border-radius:10px;
 box-shadow:0 3px 10px rgba(0,0,0,0.1);
 }
 
 h3{
 margin-top:0;
-color:#1e3a5f;
 }
 
 .row{
 display:flex;
 justify-content:space-between;
-margin-bottom:10px;
-gap:10px;
+margin-bottom:8px;
 }
 
-input,select{
+input{
 padding:6px;
-width:130px;
+width:120px;
 }
 
 input[readonly]{
 background:#f0f3f8;
 }
 
-.error{
-color:#d63031;
-font-size:13px;
-}
-
-.warning{
-color:#e67e22;
-font-size:13px;
-}
-
-.steps{
-background:#fafafa;
-padding:10px;
-border-radius:6px;
-font-family:Consolas;
-font-size:13px;
-white-space:pre-line;
-}
-
-canvas{
+table{
 width:100%;
-height:220px;
+border-collapse:collapse;
+font-size:13px;
+}
+
+td,th{
 border:1px solid #ccc;
-border-radius:6px;
+padding:4px;
+text-align:center;
+}
+
+.error{
+color:red;
+font-size:13px;
 }
 
 </style>
 
 </head>
 
+
 <body>
 
 <header>
-Railway Horizontal Curve Designer
+Railway Horizontal Curve Engineering App
 </header>
 
 <div class="container">
-
-<!-- PARAMETERS -->
-
-<div class="card">
-
-<h3>Track Parameters</h3>
-
-<div class="row">
-<label>Gauge</label>
-<select id="gauge">
-<option value="1750">BG</option>
-<option value="1000">MG</option>
-<option value="762">NG</option>
-</select>
-</div>
-
-<div class="row">
-<label>Route Group</label>
-<select id="group">
-<option>A</option>
-<option>B</option>
-<option>C</option>
-<option>D</option>
-<option>E</option>
-</select>
-</div>
-
-</div>
-
 
 <!-- GEOMETRY -->
 
@@ -137,309 +97,378 @@ Railway Horizontal Curve Designer
 </div>
 
 <div class="row">
-<label>Degree</label>
-<input id="degree">
+<label>Speed (km/h)</label>
+<input id="speed">
 </div>
 
 <div class="row">
-<label>Chord (m)</label>
-<input id="chord" value="20">
-</div>
-
-<div class="row">
-<label>Versine (mm)</label>
-<input id="versine">
-</div>
-
-<div id="geometry_error" class="error"></div>
-
-</div>
-
-
-<!-- SPEED -->
-
-<div class="card">
-
-<h3>Speed Inputs</h3>
-
-<div class="row">
-<label>Vmax</label>
-<input id="vmax">
-</div>
-
-<div class="row">
-<label>Vmin</label>
-<input id="vmin">
-</div>
-
-</div>
-
-
-<!-- CANT -->
-
-<div class="card">
-
-<h3>Cant Design</h3>
-
-<div class="row">
-<label>Eq Cant Vmax</label>
-<input id="cant_vmax" readonly>
-</div>
-
-<div class="row">
-<label>Eq Cant Vmin</label>
-<input id="cant_vmin" readonly>
-</div>
-
-<div class="row">
-<label>Max Cant</label>
-<input id="cant_max" readonly>
-</div>
-
-<div class="row">
-<label>Cant Provided</label>
-<input id="cant_provided">
+<label>Cant (mm)</label>
+<input id="cant">
 </div>
 
 <div class="row">
 <label>Cant Deficiency</label>
-<input id="cant_def" readonly>
+<input id="cd">
 </div>
 
-<div id="cant_warning" class="warning"></div>
-
 </div>
 
 
-<!-- SPEED RESULT -->
+<!-- TRANSITION DESIGN -->
 
 <div class="card">
 
-<h3>Speed Result</h3>
+<h3>Transition Curve Designer</h3>
 
 <div class="row">
-<label>Max Speed</label>
-<input id="speed" readonly>
+<label>Transition Length</label>
+<input id="transition" readonly>
 </div>
 
+<div class="row">
+<label>Shift</label>
+<input id="shift" readonly>
+</div>
+
+<button onclick="transitionDesign()">Design</button>
+
 </div>
 
 
-<!-- STEPS -->
+<!-- COMPOUND CURVE -->
 
 <div class="card">
 
-<h3>Calculation Steps</h3>
+<h3>Compound Curve</h3>
 
-<div id="steps" class="steps"></div>
+<div class="row">
+<label>Cant Curve1</label>
+<input id="ca1">
+</div>
+
+<div class="row">
+<label>Cant Curve2</label>
+<input id="ca2">
+</div>
+
+<div class="row">
+<label>Speed</label>
+<input id="vm">
+</div>
+
+<div class="row">
+<label>Transition Length</label>
+<input id="compound_L" readonly>
+</div>
+
+<button onclick="compoundCurve()">Calculate</button>
 
 </div>
 
 
-<!-- CURVE GRAPH -->
+<!-- REVERSE CURVE -->
 
 <div class="card">
 
-<h3>Curve Diagram</h3>
+<h3>Reverse Curve</h3>
 
-<canvas id="curveChart"></canvas>
+<div class="row">
+<label>Cant1</label>
+<input id="rc1">
+</div>
+
+<div class="row">
+<label>Cant2</label>
+<input id="rc2">
+</div>
+
+<div class="row">
+<label>Speed</label>
+<input id="rvm">
+</div>
+
+<div class="row">
+<label>Transition</label>
+<input id="reverse_L" readonly>
+</div>
+
+<button onclick="reverseCurve()">Calculate</button>
 
 </div>
 
 
-<!-- CANT GRAPH -->
+<!-- VERSINE TABLE -->
 
 <div class="card">
 
-<h3>Cant Diagram</h3>
+<h3>Versine Station Table</h3>
 
-<canvas id="cantChart"></canvas>
+<button onclick="versineTable()">Generate</button>
+
+<div id="versineTable"></div>
+
+</div>
+
+
+<!-- TRANSITION OFFSETS -->
+
+<div class="card">
+
+<h3>Transition Setting-Out</h3>
+
+<div class="row">
+<label>Transition</label>
+<input id="tL">
+</div>
+
+<div class="row">
+<label>Radius</label>
+<input id="tR">
+</div>
+
+<button onclick="transitionOffsets()">Generate</button>
+
+<div id="offsetTable"></div>
+
+</div>
+
+
+<!-- CANT DISTRIBUTION -->
+
+<div class="card">
+
+<h3>Cant Distribution Table</h3>
+
+<button onclick="cantDistribution()">Generate</button>
+
+<div id="cantTable"></div>
+
+</div>
+
+
+<!-- TURNOUT ON CURVE -->
+
+<div class="card">
+
+<h3>Turnout on Curve</h3>
+
+<div class="row">
+<label>Main Radius</label>
+<input id="mr">
+</div>
+
+<div class="row">
+<label>Turnout Radius</label>
+<input id="tr">
+</div>
+
+<div class="row">
+<label>Resultant Radius</label>
+<input id="resRadius" readonly>
+</div>
+
+<button onclick="turnoutCalc()">Calculate</button>
+
+</div>
+
+
+<!-- SPEED CHECK -->
+
+<div class="card">
+
+<h3>Speed Restriction Checker</h3>
+
+<div class="row">
+<label>Calculated Speed</label>
+<input id="speedCheck" readonly>
+</div>
+
+<div id="speedWarn" class="error"></div>
+
+<button onclick="speedCheck()">Check</button>
+
+</div>
+
+
+<!-- IRPWM VALIDATION -->
+
+<div class="card">
+
+<h3>IRPWM Compliance</h3>
+
+<div id="irpwm"></div>
+
+<button onclick="validateIRPWM()">Validate</button>
 
 </div>
 
 
 </div>
+
 
 
 <script>
 
-const inputs=["radius","degree","versine","vmax","vmin","cant_provided"]
 
-inputs.forEach(id=>{
-document.getElementById(id).addEventListener("input",calculate)
-})
-
-
-function calculate(){
+function transitionDesign(){
 
 let R=parseFloat(radius.value)
-let V=parseFloat(versine.value)
-let C=parseFloat(chord.value)
-let vmax_val=parseFloat(vmax.value)
-let vmin_val=parseFloat(vmin.value)
+let Ca=parseFloat(cant.value)
+let Cd=parseFloat(cd.value)
+let Vm=parseFloat(speed.value)
 
-let G=parseFloat(gauge.value)
-let group_val=group.value
+let L1=0.0056*Ca*Vm
+let L2=0.0056*Cd*Vm
+let L3=0.72*Ca
 
-let steps_txt=""
+let L=Math.max(L1,L2,L3)
 
-geometry_error.innerHTML=""
-cant_warning.innerHTML=""
+transition.value=L.toFixed(2)
 
+let S=(L*L)/(24*R)
 
-/* radius from versine */
-
-if(!R && V){
-
-R=(125*C*C)/V
-radius.value=R.toFixed(2)
-
-steps_txt+=`
-R = 125 C² / V
-R = 125 × ${C}² / ${V}
-R = ${R.toFixed(2)} m
-`
+shift.value=S.toFixed(3)
 
 }
 
 
-/* versine */
 
-if(R && !V){
+function compoundCurve(){
 
-V=(125*C*C)/R
-versine.value=V.toFixed(2)
+let L=0.0056*(ca1.value-ca2.value)*vm.value
 
-steps_txt+=`
-
-V = 125 C² / R
-V = ${V.toFixed(2)} mm
-`
+compound_L.value=Math.abs(L).toFixed(2)
 
 }
 
 
-/* degree */
 
-if(R){
+function reverseCurve(){
 
-let D=1750/R
-degree.value=D.toFixed(3)
+let L=0.0056*(parseFloat(rc1.value)+parseFloat(rc2.value))*parseFloat(rvm.value)
 
-}
-
-
-/* cant */
-
-if(R && vmax_val){
-
-let cant1=(vmax_val*vmax_val*G)/(127*R)
-
-cant_vmax.value=cant1.toFixed(2)
-
-steps_txt+=`
-
-C = V²G / 127R
-C = (${vmax_val}² × ${G}) / (127 × ${R})
-C = ${cant1.toFixed(2)} mm
-`
+reverse_L.value=L.toFixed(2)
 
 }
 
 
-if(R && vmin_val){
 
-let cant2=(vmin_val*vmin_val*G)/(127*R)
-cant_vmin.value=cant2.toFixed(2)
+function versineTable(){
+
+let R=parseFloat(radius.value)
+
+let html="<table><tr><th>Station</th><th>Versine mm</th></tr>"
+
+for(let i=10;i<=200;i+=10){
+
+let v=(1000*(20*20))/(8*R)
+
+html+="<tr><td>"+i+"</td><td>"+v.toFixed(2)+"</td></tr>"
+
+}
+
+html+="</table>"
+
+versineTable.innerHTML=html
 
 }
 
 
-/* max cant */
 
-let maxcant=(group_val=="A"||group_val=="B")?185:165
-cant_max.value=maxcant
+function transitionOffsets(){
 
+let L=parseFloat(tL.value)
+let R=parseFloat(tR.value)
 
-/* cant deficiency */
+let html="<table><tr><th>X</th><th>Offset</th></tr>"
 
-let provided=parseFloat(cant_provided.value)
+for(let x=5;x<=L;x+=5){
 
-if(provided){
+let y=(x*x*x)/(6*R*L)
 
-let deficiency=cant_vmax.value-provided
-cant_def.value=deficiency.toFixed(2)
-
-if(deficiency>100){
-
-cant_warning.innerHTML="Cant deficiency exceeds 100 mm"
+html+="<tr><td>"+x+"</td><td>"+y.toFixed(3)+"</td></tr>"
 
 }
 
-}
+html+="</table>"
 
-
-/* speed */
-
-if(R && provided){
-
-let sp=Math.sqrt((provided+100)*R*0.27)
-speed.value=sp.toFixed(2)
+offsetTable.innerHTML=html
 
 }
 
 
-steps.innerText=steps_txt
 
-drawCurve()
-drawCant()
+function cantDistribution(){
+
+let html="<table><tr><th>Station</th><th>Cant</th></tr>"
+
+let L=parseFloat(transition.value)
+let C=parseFloat(cant.value)
+
+for(let i=0;i<=L;i+=5){
+
+let val=(C/L)*i
+
+html+="<tr><td>"+i+"</td><td>"+val.toFixed(2)+"</td></tr>"
+
+}
+
+html+="</table>"
+
+cantTable.innerHTML=html
 
 }
 
 
-/* curve diagram */
 
-function drawCurve(){
+function turnoutCalc(){
 
-let canvas=document.getElementById("curveChart")
-let ctx=canvas.getContext("2d")
+let r=(mr.value*tr.value)/(parseFloat(mr.value)+parseFloat(tr.value))
 
-ctx.clearRect(0,0,canvas.width,canvas.height)
-
-ctx.beginPath()
-
-ctx.moveTo(10,150)
-ctx.lineTo(120,150)
-ctx.quadraticCurveTo(220,20,340,150)
-ctx.lineTo(460,150)
-
-ctx.stroke()
+resRadius.value=r.toFixed(2)
 
 }
 
 
-/* cant graph */
 
-function drawCant(){
+function speedCheck(){
 
-let canvas=document.getElementById("cantChart")
-let ctx=canvas.getContext("2d")
+let R=parseFloat(radius.value)
+let C=parseFloat(cant.value)
 
-ctx.clearRect(0,0,canvas.width,canvas.height)
+let sp=Math.sqrt((C+100)*R*0.27)
 
-ctx.beginPath()
+speedCheck.value=sp.toFixed(2)
 
-ctx.moveTo(10,170)
-ctx.lineTo(200,40)
-ctx.lineTo(400,40)
-ctx.lineTo(580,170)
+if(sp>130)
 
-ctx.stroke()
+speedWarn.innerHTML="Speed exceeds 130 km/h"
+
+else
+
+speedWarn.innerHTML="Speed OK"
+
+}
+
+
+
+function validateIRPWM(){
+
+let txt=""
+
+if(cant.value>185)
+
+txt+="Cant exceeds IRPWM limit<br>"
+
+if(cd.value>100)
+
+txt+="Cant deficiency above standard<br>"
+
+irpwm.innerHTML=txt
 
 }
 
 </script>
 
 </body>
-
 </html>
