@@ -4,289 +4,191 @@
 <head>
 
 <meta charset="UTF-8">
-
 <title>Horizontal Curve Designer</title>
 
 <style>
 
 body{
 font-family:Segoe UI;
-background:#f4f6fa;
+background:#e6e6e6;
 margin:0;
 }
 
-header{
-background:#2c3e50;
-color:white;
-padding:15px;
-font-size:22px;
-}
-
 .container{
-max-width:1300px;
+padding:20px;
+max-width:1000px;
 margin:auto;
-padding:20px;
-}
-
-.card{
 background:white;
-padding:20px;
-margin-bottom:20px;
-border-radius:10px;
-box-shadow:0 4px 10px rgba(0,0,0,0.1);
 }
 
-input{
-padding:6px;
-margin:5px;
+h2{
+margin-top:0;
+}
+
+.row{
+display:flex;
+align-items:center;
+margin-bottom:10px;
+}
+
+label{
+width:260px;
+}
+
+input,select{
+padding:5px;
 width:120px;
+margin-right:10px;
 }
 
 button{
-padding:7px 15px;
-background:#3498db;
-border:none;
+padding:6px 14px;
+background:#2e7dd1;
 color:white;
+border:none;
 border-radius:5px;
 cursor:pointer;
 }
 
 button:hover{
-background:#2980b9;
+background:#1c5fa8;
 }
 
 canvas{
 border:1px solid #ccc;
-}
-
-table{
-border-collapse:collapse;
-width:100%;
-margin-top:10px;
-}
-
-td,th{
-border:1px solid #ccc;
-padding:5px;
-font-size:13px;
-text-align:center;
+margin-top:20px;
 }
 
 </style>
 
 </head>
 
-<body>
 
-<header>
-Railway Horizontal Curve Design App
-</header>
+<body>
 
 <div class="container">
 
-<!-- FIELD MEASUREMENT -->
-
-<div class="card">
-
-<h3>Radius From Versine</h3>
-
-Chord C (m)
-<input id="c">
-
-Versine V (mm)
-<input id="v">
-
-<button onclick="calcRadius()">Calculate</button>
-
-<div id="radius"></div>
-
-</div>
+<h2>Horizontal Curve Designer</h2>
 
 
-<!-- DEGREE -->
+<div class="row">
+<label>Gauge</label>
+<select id="gauge">
+<option value="1750">BG</option>
+<option value="1000">MG</option>
+<option value="762">NG</option>
+</select>
 
-<div class="card">
+<label>Route Group</label>
 
-<h3>Degree of Curve</h3>
-
-Radius
-<input id="r_deg">
-
-<button onclick="calcDegree()">Calculate</button>
-
-<div id="degree"></div>
+<select id="group">
+<option>A</option>
+<option>B</option>
+<option>C</option>
+<option>D</option>
+<option>E</option>
+</select>
 
 </div>
 
 
+<div class="row">
 
-<!-- SPEED -->
+<label>Radius of Curve</label>
+<input id="radius">
 
-<div class="card">
-
-<h3>Maximum Speed</h3>
-
-Radius
-<input id="speed_r">
-
-Cant
-<input id="speed_ca">
-
-Cant Deficiency
-<input id="speed_cd">
-
-<button onclick="calcSpeed()">Calculate</button>
-
-<div id="speed"></div>
+<label>Degree of Curve</label>
+<input id="degree">
 
 </div>
 
 
 
-<!-- CANT -->
+<div class="row">
 
-<div class="card">
+<label>Chord Length</label>
+<input id="chord" value="20">
 
-<h3>Cant Calculator</h3>
-
-Speed
-<input id="cant_v">
-
-Radius
-<input id="cant_r">
-
-Gauge
-<input id="cant_g" value="1750">
-
-<button onclick="calcCant()">Calculate</button>
-
-<div id="cant"></div>
+<label>Versine</label>
+<input id="versine">
 
 </div>
 
 
 
-<!-- TRANSITION -->
+<div class="row">
 
-<div class="card">
+<label>Maximum Speed (Vmax)</label>
+<input id="vmax">
 
-<h3>Transition Length</h3>
-
-Cant
-<input id="t_ca">
-
-Cant Deficiency
-<input id="t_cd">
-
-Speed
-<input id="t_vm">
-
-<button onclick="calcTransition()">Calculate</button>
-
-<div id="transition"></div>
+<label>Minimum Speed (Vmin)</label>
+<input id="vmin">
 
 </div>
 
 
 
-<!-- SHIFT -->
+<div class="row">
 
-<div class="card">
+<label>Equilibrium Cant for Vmax</label>
+<input id="cant_vmax">
 
-<h3>Shift</h3>
+</div>
 
-Transition
-<input id="shift_l">
 
-Radius
-<input id="shift_r">
+<div class="row">
 
-<button onclick="calcShift()">Calculate</button>
+<label>Equilibrium Cant for Vmin</label>
+<input id="cant_vmin">
 
-<div id="shift"></div>
+</div>
+
+
+<div class="row">
+
+<label>Max Cant Allowable</label>
+<input id="cant_max">
+
+<label>Min Cant Allowable</label>
+<input id="cant_min">
 
 </div>
 
 
 
-<!-- CURVE GEOMETRY -->
+<div class="row">
 
-<div class="card">
+<label>Cant Provided</label>
 
-<h3>Simple Curve Geometry</h3>
+<input type="range" min="0" max="185" id="cant_provided">
 
-Radius
-<input id="geo_r">
+<span id="cant_val"></span>
 
-Intersection Angle (deg)
-<input id="geo_d">
+</div>
 
-<button onclick="calcGeometry()">Calculate</button>
 
-<div id="geometry"></div>
+<div class="row">
+
+<label>Maximum Safe Speed</label>
+
+<input id="speed">
 
 </div>
 
 
 
-<!-- VERSINE TABLE -->
+<div class="row">
 
-<div class="card">
+<button onclick="design()">Design</button>
 
-<h3>Versine Table</h3>
+<button onclick="clearInputs()">Clear Inputs</button>
 
-Radius
-<input id="vr">
-
-<button onclick="versineTable()">Generate</button>
-
-<div id="versine"></div>
+<button onclick="print()">Print</button>
 
 </div>
 
 
-
-<!-- TRANSITION OFFSET -->
-
-<div class="card">
-
-<h3>Transition Setting Out</h3>
-
-Transition
-<input id="tl">
-
-Radius
-<input id="tr">
-
-<button onclick="transitionTable()">Generate</button>
-
-<div id="transitionTable"></div>
-
-</div>
-
-
-
-<!-- CURVE DIAGRAM -->
-
-<div class="card">
-
-<h3>Curve Diagram</h3>
-
-Radius
-<input id="dr">
-
-Transition
-<input id="dt">
-
-<button onclick="drawCurve()">Draw</button>
-
-<br><br>
-
-<canvas id="curveCanvas" width="500" height="250"></canvas>
-
-</div>
-
-
+<canvas id="cantChart" width="800" height="250"></canvas>
 
 </div>
 
@@ -294,178 +196,96 @@ Transition
 
 <script>
 
+document.getElementById("cant_provided").oninput=function(){
 
-function calcRadius(){
-
-c=parseFloat(document.getElementById("c").value)
-v=parseFloat(document.getElementById("v").value)
-
-r=125*c*c/v
-
-document.getElementById("radius").innerHTML="Radius = "+r.toFixed(2)+" m"
+document.getElementById("cant_val").innerHTML=this.value+" mm"
 
 }
 
 
-function calcDegree(){
+function design(){
 
-r=parseFloat(document.getElementById("r_deg").value)
+R=parseFloat(document.getElementById("radius").value)
 
-d=1750/r
+Vmax=parseFloat(document.getElementById("vmax").value)
 
-document.getElementById("degree").innerHTML="Degree = "+d.toFixed(3)+"°"
+Vmin=parseFloat(document.getElementById("vmin").value)
 
-}
+G=parseFloat(document.getElementById("gauge").value)
 
+cant1=(Vmax*Vmax*G)/(127*R)
 
-function calcSpeed(){
+cant2=(Vmin*Vmin*G)/(127*R)
 
-r=parseFloat(document.getElementById("speed_r").value)
-ca=parseFloat(document.getElementById("speed_ca").value)
-cd=parseFloat(document.getElementById("speed_cd").value)
+document.getElementById("cant_vmax").value=cant1.toFixed(2)
 
-v=Math.sqrt((ca+cd)*r*0.27)
-
-document.getElementById("speed").innerHTML="Speed = "+v.toFixed(2)+" kmph"
-
-}
-
-
-function calcCant(){
-
-v=parseFloat(document.getElementById("cant_v").value)
-r=parseFloat(document.getElementById("cant_r").value)
-g=parseFloat(document.getElementById("cant_g").value)
-
-c=(v*v*g)/(127*r)
-
-document.getElementById("cant").innerHTML="Cant = "+c.toFixed(2)+" mm"
-
-}
+document.getElementById("cant_vmin").value=cant2.toFixed(2)
 
 
 
-function calcTransition(){
+if(document.getElementById("group").value=="A" || document.getElementById("group").value=="B")
 
-ca=parseFloat(document.getElementById("t_ca").value)
-cd=parseFloat(document.getElementById("t_cd").value)
-vm=parseFloat(document.getElementById("t_vm").value)
+maxcant=185
 
-l1=0.0056*ca*vm
-l2=0.0056*cd*vm
-l3=0.72*ca
+else
 
-l=Math.max(l1,l2,l3)
+maxcant=165
 
-document.getElementById("transition").innerHTML="Transition = "+l.toFixed(2)+" m"
+document.getElementById("cant_max").value=maxcant
 
-}
+document.getElementById("cant_min").value=0
 
 
-function calcShift(){
 
-l=parseFloat(document.getElementById("shift_l").value)
-r=parseFloat(document.getElementById("shift_r").value)
+cd=100
 
-s=(l*l)/(24*r)
+speed=Math.sqrt((cd+cant1)*R*0.27)
 
-document.getElementById("shift").innerHTML="Shift = "+s.toFixed(3)+" m"
-
-}
+document.getElementById("speed").value=speed.toFixed(2)
 
 
-function calcGeometry(){
 
-r=parseFloat(document.getElementById("geo_r").value)
-d=parseFloat(document.getElementById("geo_d").value)
-
-rad=d*Math.PI/180
-
-t=r*Math.tan(rad/2)
-
-lc=r*rad
-
-e=r*(1/Math.cos(rad/2)-1)
-
-m=r*(1-Math.cos(rad/2))
-
-document.getElementById("geometry").innerHTML=
-"Tangent="+t.toFixed(2)+" m<br>"+
-"Curve Length="+lc.toFixed(2)+" m<br>"+
-"External="+e.toFixed(2)+" m<br>"+
-"Middle Ordinate="+m.toFixed(2)+" m"
+drawCant()
 
 }
 
 
 
-function versineTable(){
+function clearInputs(){
 
-r=parseFloat(document.getElementById("vr").value)
+inputs=document.querySelectorAll("input")
 
-html="<table><tr><th>Station</th><th>Versine</th></tr>"
-
-for(i=10;i<=200;i+=10){
-
-v=(1000*(20*20))/(8*r)
-
-html+="<tr><td>"+i+"</td><td>"+v.toFixed(2)+"</td></tr>"
-
-}
-
-html+="</table>"
-
-document.getElementById("versine").innerHTML=html
+inputs.forEach(i=>i.value="")
 
 }
 
 
 
-function transitionTable(){
+function drawCant(){
 
-L=parseFloat(document.getElementById("tl").value)
-R=parseFloat(document.getElementById("tr").value)
+canvas=document.getElementById("cantChart")
 
-html="<table><tr><th>X</th><th>Offset</th></tr>"
-
-for(x=5;x<=L;x+=5){
-
-y=(x*x*x)/(6*R*L)
-
-html+="<tr><td>"+x+"</td><td>"+y.toFixed(3)+"</td></tr>"
-
-}
-
-html+="</table>"
-
-document.getElementById("transitionTable").innerHTML=html
-
-}
-
-
-
-function drawCurve(){
-
-canvas=document.getElementById("curveCanvas")
 ctx=canvas.getContext("2d")
 
-ctx.clearRect(0,0,500,250)
+ctx.clearRect(0,0,800,250)
 
 ctx.beginPath()
 
-ctx.moveTo(20,200)
+ctx.moveTo(50,200)
 
-ctx.lineTo(150,200)
+ctx.lineTo(300,50)
 
-ctx.quadraticCurveTo(250,50,350,200)
+ctx.lineTo(550,50)
 
-ctx.lineTo(480,200)
+ctx.lineTo(750,200)
 
 ctx.stroke()
 
 }
 
+
 </script>
+
 
 </body>
 
