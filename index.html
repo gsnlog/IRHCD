@@ -1,62 +1,79 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Horizontal Curve Designer</title>
 
 <style>
 
 body{
-font-family:Segoe UI;
-background:#e6e6e6;
+font-family:Segoe UI,Arial;
+background:#f3f5f9;
 margin:0;
+}
+
+header{
+background:#1f3a60;
+color:white;
+padding:14px 20px;
+font-size:20px;
 }
 
 .container{
 padding:20px;
-max-width:1000px;
-margin:auto;
-background:white;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+gap:20px;
 }
 
-h2{
+.card{
+background:white;
+padding:18px;
+border-radius:10px;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+h3{
 margin-top:0;
+color:#1f3a60;
 }
 
 .row{
 display:flex;
-align-items:center;
-margin-bottom:10px;
-}
-
-label{
-width:260px;
+justify-content:space-between;
+margin-bottom:8px;
+gap:10px;
 }
 
 input,select{
-padding:5px;
+padding:6px;
 width:120px;
-margin-right:10px;
 }
 
-button{
-padding:6px 14px;
-background:#2e7dd1;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
+input[readonly]{
+background:#eef1f6;
 }
 
-button:hover{
-background:#1c5fa8;
+.error{
+color:#d63031;
+font-size:13px;
 }
 
-canvas{
-border:1px solid #ccc;
-margin-top:20px;
+.warning{
+color:#e67e22;
+font-size:13px;
+}
+
+.steps{
+font-family:Consolas;
+font-size:13px;
+background:#fafafa;
+padding:10px;
+border-radius:6px;
+white-space:pre-line;
 }
 
 </style>
@@ -66,19 +83,29 @@ margin-top:20px;
 
 <body>
 
+<header>
+Railway Horizontal Curve Designer
+</header>
+
 <div class="container">
 
-<h2>Horizontal Curve Designer</h2>
+<!-- INPUTS -->
 
+<div class="card">
+
+<h3>Track Parameters</h3>
 
 <div class="row">
 <label>Gauge</label>
+
 <select id="gauge">
 <option value="1750">BG</option>
 <option value="1000">MG</option>
 <option value="762">NG</option>
 </select>
+</div>
 
+<div class="row">
 <label>Route Group</label>
 
 <select id="group">
@@ -88,107 +115,116 @@ margin-top:20px;
 <option>D</option>
 <option>E</option>
 </select>
+</div>
 
 </div>
 
 
-<div class="row">
 
-<label>Radius of Curve</label>
+<div class="card">
+
+<h3>Curve Geometry</h3>
+
+<div class="row">
+<label>Radius (m)</label>
 <input id="radius">
+</div>
 
-<label>Degree of Curve</label>
+<div class="row">
+<label>Degree</label>
 <input id="degree">
-
 </div>
 
-
-
 <div class="row">
-
-<label>Chord Length</label>
+<label>Chord (m)</label>
 <input id="chord" value="20">
+</div>
 
-<label>Versine</label>
+<div class="row">
+<label>Versine (mm)</label>
 <input id="versine">
+</div>
+
+<div id="geometry_error" class="error"></div>
 
 </div>
 
 
 
-<div class="row">
+<div class="card">
 
-<label>Maximum Speed (Vmax)</label>
+<h3>Speed</h3>
+
+<div class="row">
+<label>Vmax km/h</label>
 <input id="vmax">
+</div>
 
-<label>Minimum Speed (Vmin)</label>
+<div class="row">
+<label>Vmin km/h</label>
 <input id="vmin">
+</div>
 
 </div>
 
 
 
+<div class="card">
+
+<h3>Cant Results</h3>
+
 <div class="row">
-
-<label>Equilibrium Cant for Vmax</label>
-<input id="cant_vmax">
-
+<label>Eq Cant Vmax</label>
+<input id="cant_vmax" readonly>
 </div>
 
-
 <div class="row">
-
-<label>Equilibrium Cant for Vmin</label>
-<input id="cant_vmin">
-
+<label>Eq Cant Vmin</label>
+<input id="cant_vmin" readonly>
 </div>
 
-
 <div class="row">
-
-<label>Max Cant Allowable</label>
-<input id="cant_max">
-
-<label>Min Cant Allowable</label>
-<input id="cant_min">
-
+<label>Max Cant</label>
+<input id="cant_max" readonly>
 </div>
 
-
-
 <div class="row">
-
 <label>Cant Provided</label>
-
-<input type="range" min="0" max="185" id="cant_provided">
-
-<span id="cant_val"></span>
-
+<input id="cant_provided">
 </div>
-
 
 <div class="row">
+<label>Cant Deficiency</label>
+<input id="cant_def" readonly>
+</div>
 
-<label>Maximum Safe Speed</label>
-
-<input id="speed">
+<div id="cant_warning" class="warning"></div>
 
 </div>
 
 
+
+<div class="card">
+
+<h3>Speed Result</h3>
 
 <div class="row">
-
-<button onclick="design()">Design</button>
-
-<button onclick="clearInputs()">Clear Inputs</button>
-
-<button onclick="print()">Print</button>
+<label>Maximum Speed</label>
+<input id="speed" readonly>
+</div>
 
 </div>
 
 
-<canvas id="cantChart" width="800" height="250"></canvas>
+
+<div class="card">
+
+<h3>Calculation Steps</h3>
+
+<div class="steps" id="steps"></div>
+
+</div>
+
 
 </div>
 
@@ -196,97 +232,163 @@ margin-top:20px;
 
 <script>
 
-document.getElementById("cant_provided").oninput=function(){
 
-document.getElementById("cant_val").innerHTML=this.value+" mm"
+const fields=["radius","degree","versine","vmax","vmin","cant_provided"]
 
-}
+fields.forEach(id=>{
 
+document.getElementById(id).addEventListener("input",calculate)
 
-function design(){
-
-R=parseFloat(document.getElementById("radius").value)
-
-Vmax=parseFloat(document.getElementById("vmax").value)
-
-Vmin=parseFloat(document.getElementById("vmin").value)
-
-G=parseFloat(document.getElementById("gauge").value)
-
-cant1=(Vmax*Vmax*G)/(127*R)
-
-cant2=(Vmin*Vmin*G)/(127*R)
-
-document.getElementById("cant_vmax").value=cant1.toFixed(2)
-
-document.getElementById("cant_vmin").value=cant2.toFixed(2)
+})
 
 
+function calculate(){
 
-if(document.getElementById("group").value=="A" || document.getElementById("group").value=="B")
+let R=parseFloat(radius.value)
+let V=parseFloat(versine.value)
+let C=parseFloat(chord.value)
+let vmax_val=parseFloat(vmax.value)
+let vmin_val=parseFloat(vmin.value)
+let gauge=parseFloat(gauge_select())
+let group=document.getElementById("group").value
 
-maxcant=185
+let step_text=""
 
-else
-
-maxcant=165
-
-document.getElementById("cant_max").value=maxcant
-
-document.getElementById("cant_min").value=0
+geometry_error.innerHTML=""
+cant_warning.innerHTML=""
 
 
 
-cd=100
+if(!R && V){
 
-speed=Math.sqrt((cd+cant1)*R*0.27)
+R=(125*C*C)/V
+radius.value=R.toFixed(2)
 
-document.getElementById("speed").value=speed.toFixed(2)
+step_text+=`
+Radius from versine
 
+R = 125 C² / V
+R = 125 × ${C}² / ${V}
 
-
-drawCant()
-
+R = ${R.toFixed(2)} m
+`
 }
 
 
 
-function clearInputs(){
+if(R && !V){
 
-inputs=document.querySelectorAll("input")
+V=(125*C*C)/R
+versine.value=V.toFixed(2)
 
-inputs.forEach(i=>i.value="")
+step_text+=`
+Versine from radius
+
+V = 125 C² / R
+
+V = ${V.toFixed(2)} mm
+`
+}
+
+
+
+if(R){
+
+let D=1750/R
+degree.value=D.toFixed(3)
+
+step_text+=`
+
+Degree of curve
+
+D = 1750 / R
+
+D = ${D.toFixed(3)}°
+`
 
 }
 
 
 
-function drawCant(){
+if(R && vmax_val){
 
-canvas=document.getElementById("cantChart")
+let cant1=(vmax_val*vmax_val*gauge)/(127*R)
 
-ctx=canvas.getContext("2d")
+cant_vmax.value=cant1.toFixed(2)
 
-ctx.clearRect(0,0,800,250)
+step_text+=`
 
-ctx.beginPath()
+Cant for Vmax
 
-ctx.moveTo(50,200)
+C = V²G / 127R
 
-ctx.lineTo(300,50)
+C = (${vmax_val}² × ${gauge}) / (127 × ${R})
 
-ctx.lineTo(550,50)
-
-ctx.lineTo(750,200)
-
-ctx.stroke()
+C = ${cant1.toFixed(2)} mm
+`
 
 }
 
+
+
+if(R && vmin_val){
+
+let cant2=(vmin_val*vmin_val*gauge)/(127*R)
+
+cant_vmin.value=cant2.toFixed(2)
+
+}
+
+
+
+let maxcant=(group=="A"||group=="B")?185:165
+
+cant_max.value=maxcant
+
+
+
+let provided=parseFloat(cant_provided.value)
+
+if(provided){
+
+let deficiency=(cant_vmax.value-provided)
+
+cant_def.value=deficiency.toFixed(2)
+
+if(deficiency>100){
+
+cant_warning.innerHTML="Cant deficiency exceeds 100 mm"
+
+}
+
+}
+
+
+
+if(R && provided){
+
+let speed_calc=Math.sqrt((provided+100)*R*0.27)
+
+speed.value=speed_calc.toFixed(2)
+
+}
+
+
+
+steps.innerText=step_text
+
+}
+
+
+
+function gauge_select(){
+
+return document.getElementById("gauge").value
+
+}
 
 </script>
 
 
 </body>
-
 </html>
