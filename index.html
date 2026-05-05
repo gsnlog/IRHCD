@@ -1,474 +1,1074 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curve Design and ROC Report</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --panel: #fffaf1;
+      --panel-strong: #f7ead2;
+      --ink: #1f1a14;
+      --muted: #65574a;
+      --accent: #0f766e;
+      --accent-2: #9a3412;
+      --border: #d9c9af;
+      --good: #166534;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --shadow: 0 18px 45px rgba(75, 55, 25, 0.12);
+      --radius: 18px;
+      --mono: "Consolas", "Courier New", monospace;
+      --sans: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+    * {
+      box-sizing: border-box;
+    }
 
-<title>Horizontal Curve Engineering Tool</title>
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.16), transparent 25%),
+        radial-gradient(circle at top right, rgba(154, 52, 18, 0.14), transparent 22%),
+        linear-gradient(180deg, #efe4d2 0%, var(--bg) 48%, #efe8dc 100%);
+      min-height: 100vh;
+    }
 
-<style>
+    .wrap {
+      width: min(1320px, calc(100% - 24px));
+      margin: 24px auto 48px;
+    }
 
-body{
-font-family:Segoe UI;
-margin:0;
-background:#eef2f7;
-}
+    .hero,
+    .panel {
+      background: rgba(255, 250, 241, 0.92);
+      border: 1px solid rgba(217, 201, 175, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
 
-header{
-background:#1e3a5f;
-color:white;
-padding:14px;
-font-size:20px;
-}
+    .hero {
+      padding: 28px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      position: relative;
+    }
 
-.container{
-padding:20px;
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
-gap:20px;
-}
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -90px auto;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(15, 118, 110, 0.12), transparent 68%);
+    }
 
-.card{
-background:white;
-padding:16px;
-border-radius:10px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
-}
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.15;
+    }
 
-h3{
-margin-top:0;
-}
+    h1 {
+      font-size: clamp(2rem, 3vw, 3.4rem);
+      letter-spacing: -0.03em;
+      max-width: 12ch;
+    }
 
-.row{
-display:flex;
-justify-content:space-between;
-margin-bottom:8px;
-}
+    h2 {
+      font-size: 1.15rem;
+      margin-bottom: 14px;
+    }
 
-input{
-padding:6px;
-width:120px;
-}
+    h3 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
 
-input[readonly]{
-background:#f0f3f8;
-}
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
 
-table{
-width:100%;
-border-collapse:collapse;
-font-size:13px;
-}
+    .hero-grid,
+    .layout {
+      display: grid;
+      gap: 18px;
+    }
 
-td,th{
-border:1px solid #ccc;
-padding:4px;
-text-align:center;
-}
+    .hero-grid {
+      grid-template-columns: 1.55fr 1fr;
+      align-items: start;
+    }
 
-.error{
-color:red;
-font-size:13px;
-}
+    .layout {
+      grid-template-columns: minmax(360px, 470px) minmax(0, 1fr);
+    }
 
-</style>
+    .stats,
+    .grid,
+    .inline-grid {
+      display: grid;
+      gap: 12px;
+    }
 
+    .stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 18px;
+    }
+
+    .stat,
+    .callout,
+    .report-card,
+    .formula {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 234, 210, 0.74));
+    }
+
+    .stat {
+      padding: 14px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.2rem;
+      color: var(--ink);
+      margin-top: 6px;
+    }
+
+    .callout {
+      padding: 16px;
+    }
+
+    .panel {
+      padding: 20px;
+    }
+
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .inline-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .hint {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid #c8b79c;
+      border-radius: 12px;
+      padding: 11px 12px;
+      background: #fffdf8;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    input:focus,
+    select:focus {
+      outline: 2px solid rgba(15, 118, 110, 0.22);
+      border-color: var(--accent);
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .checkbox input {
+      width: auto;
+      margin: 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--accent), #115e59);
+      color: white;
+      box-shadow: 0 12px 24px rgba(15, 118, 110, 0.22);
+    }
+
+    .secondary {
+      background: linear-gradient(135deg, #f3dcc1, #ead0ad);
+      color: #40250d;
+    }
+
+    .formula {
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .report {
+      display: grid;
+      gap: 16px;
+    }
+
+    .report-card {
+      padding: 18px;
+    }
+
+    .kpis {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 10px;
+    }
+
+    .kpi {
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--panel-strong);
+      border: 1px solid var(--border);
+    }
+
+    .kpi span {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .kpi strong {
+      font-size: 1.25rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .ok {
+      color: var(--good);
+      background: rgba(22, 101, 52, 0.09);
+    }
+
+    .warn {
+      color: var(--warn);
+      background: rgba(180, 83, 9, 0.1);
+    }
+
+    .bad {
+      color: var(--bad);
+      background: rgba(185, 28, 28, 0.1);
+    }
+
+    ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--ink);
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.95rem;
+    }
+
+    .report-table th,
+    .report-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #e4d6bf;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .report-table th {
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .mono {
+      font-family: var(--mono);
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px 18px;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    @media (max-width: 1100px) {
+      .hero-grid,
+      .layout,
+      .grid,
+      .inline-grid,
+      .kpis {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      .hero,
+      .panel,
+      .report-card,
+      .formula,
+      .stat,
+      .callout,
+      .kpi {
+        box-shadow: none;
+        backdrop-filter: none;
+      }
+
+      .actions {
+        display: none;
+      }
+    }
+  </style>
 </head>
-
-
 <body>
-
-<header>
-Railway Horizontal Curve Engineering App
-</header>
-
-<div class="container">
-
-<!-- GEOMETRY -->
-
-<div class="card">
-
-<h3>Curve Geometry</h3>
-
-<div class="row">
-<label>Radius (m)</label>
-<input id="radius">
-</div>
-
-<div class="row">
-<label>Speed (km/h)</label>
-<input id="speed">
-</div>
-
-<div class="row">
-<label>Cant (mm)</label>
-<input id="cant">
-</div>
-
-<div class="row">
-<label>Cant Deficiency</label>
-<input id="cd">
-</div>
-
-</div>
-
-
-<!-- TRANSITION DESIGN -->
-
-<div class="card">
-
-<h3>Transition Curve Designer</h3>
-
-<div class="row">
-<label>Transition Length</label>
-<input id="transition" readonly>
-</div>
-
-<div class="row">
-<label>Shift</label>
-<input id="shift" readonly>
-</div>
-
-<button onclick="transitionDesign()">Design</button>
-
-</div>
-
-
-<!-- COMPOUND CURVE -->
-
-<div class="card">
-
-<h3>Compound Curve</h3>
-
-<div class="row">
-<label>Cant Curve1</label>
-<input id="ca1">
-</div>
-
-<div class="row">
-<label>Cant Curve2</label>
-<input id="ca2">
-</div>
-
-<div class="row">
-<label>Speed</label>
-<input id="vm">
-</div>
-
-<div class="row">
-<label>Transition Length</label>
-<input id="compound_L" readonly>
-</div>
-
-<button onclick="compoundCurve()">Calculate</button>
-
-</div>
-
-
-<!-- REVERSE CURVE -->
-
-<div class="card">
-
-<h3>Reverse Curve</h3>
-
-<div class="row">
-<label>Cant1</label>
-<input id="rc1">
-</div>
-
-<div class="row">
-<label>Cant2</label>
-<input id="rc2">
-</div>
-
-<div class="row">
-<label>Speed</label>
-<input id="rvm">
-</div>
-
-<div class="row">
-<label>Transition</label>
-<input id="reverse_L" readonly>
-</div>
-
-<button onclick="reverseCurve()">Calculate</button>
-
-</div>
-
-
-<!-- VERSINE TABLE -->
-
-<div class="card">
-
-<h3>Versine Station Table</h3>
-
-<button onclick="versineTable()">Generate</button>
-
-<div id="versineTable"></div>
-
-</div>
-
-
-<!-- TRANSITION OFFSETS -->
-
-<div class="card">
-
-<h3>Transition Setting-Out</h3>
-
-<div class="row">
-<label>Transition</label>
-<input id="tL">
-</div>
-
-<div class="row">
-<label>Radius</label>
-<input id="tR">
-</div>
-
-<button onclick="transitionOffsets()">Generate</button>
-
-<div id="offsetTable"></div>
-
-</div>
-
-
-<!-- CANT DISTRIBUTION -->
-
-<div class="card">
-
-<h3>Cant Distribution Table</h3>
-
-<button onclick="cantDistribution()">Generate</button>
-
-<div id="cantTable"></div>
-
-</div>
-
-
-<!-- TURNOUT ON CURVE -->
-
-<div class="card">
-
-<h3>Turnout on Curve</h3>
-
-<div class="row">
-<label>Main Radius</label>
-<input id="mr">
-</div>
-
-<div class="row">
-<label>Turnout Radius</label>
-<input id="tr">
-</div>
-
-<div class="row">
-<label>Resultant Radius</label>
-<input id="resRadius" readonly>
-</div>
-
-<button onclick="turnoutCalc()">Calculate</button>
-
-</div>
-
-
-<!-- SPEED CHECK -->
-
-<div class="card">
-
-<h3>Speed Restriction Checker</h3>
-
-<div class="row">
-<label>Calculated Speed</label>
-<input id="speedCheck" readonly>
-</div>
-
-<div id="speedWarn" class="error"></div>
-
-<button onclick="speedCheck()">Check</button>
-
-</div>
-
-
-<!-- IRPWM VALIDATION -->
-
-<div class="card">
-
-<h3>IRPWM Compliance</h3>
-
-<div id="irpwm"></div>
-
-<button onclick="validateIRPWM()">Validate</button>
-
-</div>
-
-
-</div>
-
-
-
-<script>
-
-
-function transitionDesign(){
-
-let R=parseFloat(radius.value)
-let Ca=parseFloat(cant.value)
-let Cd=parseFloat(cd.value)
-let Vm=parseFloat(speed.value)
-
-let L1=0.0056*Ca*Vm
-let L2=0.0056*Cd*Vm
-let L3=0.72*Ca
-
-let L=Math.max(L1,L2,L3)
-
-transition.value=L.toFixed(2)
-
-let S=(L*L)/(24*R)
-
-shift.value=S.toFixed(3)
-
-}
-
-
-
-function compoundCurve(){
-
-let L=0.0056*(ca1.value-ca2.value)*vm.value
-
-compound_L.value=Math.abs(L).toFixed(2)
-
-}
-
-
-
-function reverseCurve(){
-
-let L=0.0056*(parseFloat(rc1.value)+parseFloat(rc2.value))*parseFloat(rvm.value)
-
-reverse_L.value=L.toFixed(2)
-
-}
-
-
-
-function versineTable(){
-
-let R=parseFloat(radius.value)
-
-let html="<table><tr><th>Station</th><th>Versine mm</th></tr>"
-
-for(let i=10;i<=200;i+=10){
-
-let v=(1000*(20*20))/(8*R)
-
-html+="<tr><td>"+i+"</td><td>"+v.toFixed(2)+"</td></tr>"
-
-}
-
-html+="</table>"
-
-versineTable.innerHTML=html
-
-}
-
-
-
-function transitionOffsets(){
-
-let L=parseFloat(tL.value)
-let R=parseFloat(tR.value)
-
-let html="<table><tr><th>X</th><th>Offset</th></tr>"
-
-for(let x=5;x<=L;x+=5){
-
-let y=(x*x*x)/(6*R*L)
-
-html+="<tr><td>"+x+"</td><td>"+y.toFixed(3)+"</td></tr>"
-
-}
-
-html+="</table>"
-
-offsetTable.innerHTML=html
-
-}
-
-
-
-function cantDistribution(){
-
-let html="<table><tr><th>Station</th><th>Cant</th></tr>"
-
-let L=parseFloat(transition.value)
-let C=parseFloat(cant.value)
-
-for(let i=0;i<=L;i+=5){
-
-let val=(C/L)*i
-
-html+="<tr><td>"+i+"</td><td>"+val.toFixed(2)+"</td></tr>"
-
-}
-
-html+="</table>"
-
-cantTable.innerHTML=html
-
-}
-
-
-
-function turnoutCalc(){
-
-let r=(mr.value*tr.value)/(parseFloat(mr.value)+parseFloat(tr.value))
-
-resRadius.value=r.toFixed(2)
-
-}
-
-
-
-function speedCheck(){
-
-let R=parseFloat(radius.value)
-let C=parseFloat(cant.value)
-
-let sp=Math.sqrt((C+100)*R*0.27)
-
-speedCheck.value=sp.toFixed(2)
-
-if(sp>130)
-
-speedWarn.innerHTML="Speed exceeds 130 km/h"
-
-else
-
-speedWarn.innerHTML="Speed OK"
-
-}
-
-
-
-function validateIRPWM(){
-
-let txt=""
-
-if(cant.value>185)
-
-txt+="Cant exceeds IRPWM limit<br>"
-
-if(cd.value>100)
-
-txt+="Cant deficiency above standard<br>"
-
-irpwm.innerHTML=txt
-
-}
-
-</script>
-
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <p class="hint">Based on Curves &amp; Turnouts, Chapter 4, Paras 401-417</p>
+          <h1>Curve Design and ROC Full Report</h1>
+          <p style="margin-top: 14px;">This page calculates curve, cant, transition, turnout, crossover, diamond, gradient, and vertical-curve checks from the PDF and writes the result as a full report directly on the page.</p>
+          <div class="stats">
+            <div class="stat">
+              <span class="hint">Radius from versine</span>
+              <strong>Para 401</strong>
+            </div>
+            <div class="stat">
+              <span class="hint">Speed and cant</span>
+              <strong>Paras 403-405</strong>
+            </div>
+            <div class="stat">
+              <span class="hint">Turnout and crossover checks</span>
+              <strong>Paras 408-414</strong>
+            </div>
+            <div class="stat">
+              <span class="hint">Gradient and vertical curve</span>
+              <strong>Paras 416-417</strong>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <h3>What this page covers</h3>
+          <p>It supports fully transitioned curves, non-transitioned curves with virtual transition, limited transition checks, compound and reverse transitions, turnout checks on curves, curved main line at turnouts, diamond crossing constraints, compensation for curvature, and vertical curve requirements.</p>
+          <div class="formula" style="margin-top: 14px;">Core formulas
+R = 125 * C^2 / V
+V = 0.27 * sqrt(R * (Ca + Cd))
+Cant = G * V^2 / (127 * R)
+Shift = L^2 / (24 * R)
+Offset = X^3 / (6 * R * L)</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="panel">
+        <h2>Input Data</h2>
+
+        <div class="grid">
+          <div class="field">
+            <label for="curveName">Curve / location name</label>
+            <input id="curveName" type="text" value="Curve A">
+          </div>
+          <div class="field">
+            <label for="routeGroup">Route group</label>
+            <select id="routeGroup">
+              <option value="AB">Group A / B</option>
+              <option value="Other">Other route</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="curveType">Curve type</label>
+            <select id="curveType">
+              <option value="transitioned">Fully transitioned</option>
+              <option value="nonTransitioned">Non-transitioned with virtual transition</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sectionalSpeed">Sectional speed limit (km/h)</label>
+            <input id="sectionalSpeed" type="number" min="0" value="110">
+          </div>
+        </div>
+
+        <h3 style="margin-top: 20px;">Geometry</h3>
+        <div class="grid">
+          <div class="field">
+            <label for="radius">Radius R (m)</label>
+            <input id="radius" type="number" min="0" step="0.01" value="600">
+          </div>
+          <div class="field">
+            <label for="curveLength">Curve length (m)</label>
+            <input id="curveLength" type="number" min="0" step="0.01" value="320">
+          </div>
+          <div class="field">
+            <label for="chordLength">Chord length C (m) for versine</label>
+            <input id="chordLength" type="number" min="0" step="0.01" value="20">
+          </div>
+          <div class="field">
+            <label for="versine">Versine V (mm)</label>
+            <input id="versine" type="number" min="0" step="0.01" value="8.33">
+          </div>
+          <div class="field">
+            <label for="transitionLength">Actual transition length L (m)</label>
+            <input id="transitionLength" type="number" min="0" step="0.01" value="70">
+          </div>
+          <div class="field">
+            <label for="offsetX">Offset checkpoint X (m)</label>
+            <input id="offsetX" type="number" min="0" step="0.01" value="20">
+          </div>
+        </div>
+
+        <h3 style="margin-top: 20px;">Speed and cant basis</h3>
+        <div class="grid">
+          <div class="field">
+            <label for="designSpeed">Design / equilibrium speed (km/h)</label>
+            <input id="designSpeed" type="number" min="0" step="0.01" value="85">
+          </div>
+          <div class="field">
+            <label for="goodsSpeed">Goods / slow train speed (km/h)</label>
+            <input id="goodsSpeed" type="number" min="0" step="0.01" value="45">
+          </div>
+          <div class="field">
+            <label for="gauge">Dynamic gauge G (mm)</label>
+            <input id="gauge" type="number" min="0" step="0.01" value="1750">
+          </div>
+          <div class="field">
+            <label for="stockType">Permissible cant deficiency class</label>
+            <select id="stockType">
+              <option value="75">Other stock - 75 mm</option>
+              <option value="100">Nominated stock - 100 mm</option>
+              <option value="115">Nominated stock - 115 mm</option>
+              <option value="150">Nominated stock - 150 mm</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="checkbox">
+          <input id="turnoutTrack" type="checkbox">
+          <label for="turnoutTrack">Curve has turnout on track, so max design cant is limited to 140 mm</label>
+        </div>
+        <div class="checkbox">
+          <input id="outerCrossingLimit" type="checkbox">
+          <label for="outerCrossingLimit">150 mm class is affected by turnout with crossing on outer rail / expansion device, so cant deficiency is capped at 115 mm</label>
+        </div>
+
+        <h3 style="margin-top: 20px;">Special cases</h3>
+        <div class="grid">
+          <div class="field">
+            <label for="compoundCa1">Compound curve C<sub>a1</sub> (mm)</label>
+            <input id="compoundCa1" type="number" min="0" step="0.01" value="95">
+          </div>
+          <div class="field">
+            <label for="compoundCa2">Compound curve C<sub>a2</sub> (mm)</label>
+            <input id="compoundCa2" type="number" min="0" step="0.01" value="60">
+          </div>
+          <div class="field">
+            <label for="compoundCd1">Compound curve C<sub>d1</sub> (mm)</label>
+            <input id="compoundCd1" type="number" min="0" step="0.01" value="75">
+          </div>
+          <div class="field">
+            <label for="compoundCd2">Compound curve C<sub>d2</sub> (mm)</label>
+            <input id="compoundCd2" type="number" min="0" step="0.01" value="45">
+          </div>
+          <div class="field">
+            <label for="reverseCa1">Reverse curve C<sub>a1</sub> (mm)</label>
+            <input id="reverseCa1" type="number" min="0" step="0.01" value="95">
+          </div>
+          <div class="field">
+            <label for="reverseCa2">Reverse curve C<sub>a2</sub> (mm)</label>
+            <input id="reverseCa2" type="number" min="0" step="0.01" value="80">
+          </div>
+          <div class="field">
+            <label for="reverseCd1">Reverse curve C<sub>d1</sub> (mm)</label>
+            <input id="reverseCd1" type="number" min="0" step="0.01" value="75">
+          </div>
+          <div class="field">
+            <label for="reverseCd2">Reverse curve C<sub>d2</sub> (mm)</label>
+            <input id="reverseCd2" type="number" min="0" step="0.01" value="65">
+          </div>
+          <div class="field">
+            <label for="reverseStraight">Straight between reverse transitions (m)</label>
+            <input id="reverseStraight" type="number" min="0" step="0.01" value="60">
+          </div>
+          <div class="field">
+            <label for="turnoutType">Turnout type</label>
+            <select id="turnoutType">
+              <option value="1:12">1 in 12 curved switch</option>
+              <option value="1:8.5">1 in 8.5 curved switch</option>
+              <option value="1:8.5TWS">1 in 8.5 thick web curved switch on emergency crossover</option>
+              <option value="1:8.5Sym">1 in 8.5 symmetrical split</option>
+              <option value="1:12TWS">1 in 12 TWS</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="turnoutPlacement">Turnout takes off from</label>
+            <select id="turnoutPlacement">
+              <option value="straight">Straight track</option>
+              <option value="outside">Outside of curve</option>
+              <option value="inside">Inside of curve</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="mainCurveDegree">Main line curve degree (for 1 in 8.5 outside case)</label>
+            <input id="mainCurveDegree" type="number" min="0" step="0.01" value="4">
+          </div>
+          <div class="field">
+            <label for="leadRadius">Resultant lead / turn-in curve radius (m)</label>
+            <input id="leadRadius" type="number" min="0" step="0.01" value="350">
+          </div>
+          <div class="field">
+            <label for="interlockingSpeed">Interlocking permitted run-through speed (km/h)</label>
+            <input id="interlockingSpeed" type="number" min="0" step="0.01" value="30">
+          </div>
+          <div class="field">
+            <label for="turnoutEqCant">Turnout equilibrium cant from Schedule of Dimensions (mm)</label>
+            <input id="turnoutEqCant" type="number" min="0" step="0.01" value="35">
+          </div>
+          <div class="field">
+            <label for="turnoutCase">Curved main line at turnout case</label>
+            <select id="turnoutCase">
+              <option value="similar">Similar flexure</option>
+              <option value="contrary">Contrary flexure</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="reverseAfterTurnout">Turnout is followed by reverse curve</label>
+            <select id="reverseAfterTurnout">
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="checkbox">
+          <input id="hasCrossover" type="checkbox">
+          <label for="hasCrossover">Curve includes crossover road case</label>
+        </div>
+        <div class="checkbox">
+          <input id="hasDiamond" type="checkbox">
+          <label for="hasDiamond">Curve includes diamond crossing case</label>
+        </div>
+        <div class="checkbox">
+          <input id="diamondApproachStraight" type="checkbox">
+          <label for="diamondApproachStraight">Diamond is on straight approach with minimum 50 m straight before curve</label>
+        </div>
+
+        <h3 style="margin-top: 20px;">Gradient and vertical curve</h3>
+        <div class="grid">
+          <div class="field">
+            <label for="existingGradient">Existing gradient (%)</label>
+            <input id="existingGradient" type="number" step="0.001" value="0.5">
+          </div>
+          <div class="field">
+            <label for="rulingGradient">Ruling gradient (%)</label>
+            <input id="rulingGradient" type="number" step="0.001" value="0.5">
+          </div>
+          <div class="field">
+            <label for="grade1">Grade 1 (%)</label>
+            <input id="grade1" type="number" step="0.001" value="0.2">
+          </div>
+          <div class="field">
+            <label for="grade2">Grade 2 (%)</label>
+            <input id="grade2" type="number" step="0.001" value="-0.3">
+          </div>
+          <div class="field">
+            <label for="verticalGroup">Vertical curve route class</label>
+            <select id="verticalGroup">
+              <option value="A">Group A</option>
+              <option value="B">Group B</option>
+              <option value="CDE">Group C / D / E</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="generateBtn" type="button">Generate Full Report</button>
+          <button class="secondary" id="resetBtn" type="button">Reset Demo Values</button>
+          <button class="secondary" id="printBtn" type="button">Print Report</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Full Report</h2>
+        <div id="report" class="report">
+          <div class="empty">Enter or adjust the design data and click <strong>Generate Full Report</strong>. The page will calculate the applicable cases from the PDF and show the final findings here.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const ids = [
+      "curveName", "routeGroup", "curveType", "sectionalSpeed", "radius", "curveLength",
+      "chordLength", "versine", "transitionLength", "offsetX", "designSpeed", "goodsSpeed",
+      "gauge", "stockType", "turnoutTrack", "outerCrossingLimit", "compoundCa1",
+      "compoundCa2", "compoundCd1", "compoundCd2", "reverseCa1", "reverseCa2",
+      "reverseCd1", "reverseCd2", "reverseStraight", "turnoutType", "turnoutPlacement",
+      "mainCurveDegree", "leadRadius", "interlockingSpeed", "turnoutEqCant", "turnoutCase",
+      "reverseAfterTurnout", "hasCrossover", "hasDiamond", "diamondApproachStraight",
+      "existingGradient", "rulingGradient", "grade1", "grade2", "verticalGroup"
+    ];
+
+    const defaultState = {};
+
+    function el(id) {
+      return document.getElementById(id);
+    }
+
+    function num(id) {
+      const value = parseFloat(el(id).value);
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function txt(id) {
+      return el(id).value;
+    }
+
+    function checked(id) {
+      return el(id).checked;
+    }
+
+    function round(value, digits = 2) {
+      return Number.isFinite(value) ? Number(value.toFixed(digits)) : 0;
+    }
+
+    function roundTo5(value) {
+      return Math.round(value / 5) * 5;
+    }
+
+    function ceilTo10(value) {
+      return Math.ceil(value / 10) * 10;
+    }
+
+    function fmt(value, unit = "", digits = 2) {
+      if (!Number.isFinite(value)) {
+        return "Not available";
+      }
+      return `${value.toFixed(digits)}${unit ? ` ${unit}` : ""}`;
+    }
+
+    function badge(type, text) {
+      return `<span class="badge ${type}">${text}</span>`;
+    }
+
+    function statusFromChecks(checks) {
+      if (checks.some((item) => item.level === "bad")) {
+        return "bad";
+      }
+      if (checks.some((item) => item.level === "warn")) {
+        return "warn";
+      }
+      return "ok";
+    }
+
+    function getCantLimit(routeGroup, turnoutTrack) {
+      if (turnoutTrack) {
+        return 140;
+      }
+      return routeGroup === "AB" ? 185 : 165;
+    }
+
+    function getCdLimit(stockType, outerCrossingLimit) {
+      let limit = parseFloat(stockType);
+      if (limit === 150 && outerCrossingLimit) {
+        limit = 115;
+      }
+      return limit;
+    }
+
+    function solveBestSpeed(radius, transitionLength, cantLimit, cdLimit, sectionalSpeed, isNonTransitioned) {
+      const factor = isNonTransitioned ? 0.008 : 0.0056;
+      let best = null;
+
+      for (let speed = Math.floor(sectionalSpeed); speed >= 1; speed -= 1) {
+        const maxCaByGradient = transitionLength > 0 ? transitionLength / 0.72 : 0;
+        const maxCaByRate = transitionLength > 0 ? transitionLength / (factor * speed) : 0;
+        const feasibleCaMax = Math.floor(Math.min(cantLimit, maxCaByGradient, maxCaByRate));
+        if (feasibleCaMax < 0) {
+          continue;
+        }
+
+        for (let ca = feasibleCaMax; ca >= 0; ca -= 1) {
+          const maxCdByRate = transitionLength > 0 ? transitionLength / (factor * speed) : 0;
+          const cdMax = Math.floor(Math.min(cdLimit, maxCdByRate));
+          const neededSum = Math.pow(speed / 0.27, 2) / radius;
+          const minCdNeeded = Math.ceil(neededSum - ca);
+
+          if (minCdNeeded <= cdMax) {
+            const cd = Math.max(0, minCdNeeded);
+            best = {
+              speed,
+              cant: ca,
+              cantDeficiency: cd,
+              rateLengthForCant: factor * ca * speed,
+              rateLengthForCd: factor * cd * speed,
+              gradientLength: 0.72 * ca
+            };
+            return best;
+          }
+        }
+      }
+
+      return best;
+    }
+
+    function turnoutBaseSpeed(turnoutType) {
+      const map = {
+        "1:8.5": 15,
+        "1:8.5TWS": 25,
+        "1:8.5Sym": 30,
+        "1:12": 30,
+        "1:12TWS": 50
+      };
+      return map[turnoutType] || 15;
+    }
+
+    function collectData() {
+      return {
+        curveName: txt("curveName").trim() || "Curve",
+        routeGroup: txt("routeGroup"),
+        curveType: txt("curveType"),
+        sectionalSpeed: num("sectionalSpeed"),
+        radius: num("radius"),
+        curveLength: num("curveLength"),
+        chordLength: num("chordLength"),
+        versine: num("versine"),
+        transitionLength: num("transitionLength"),
+        offsetX: num("offsetX"),
+        designSpeed: num("designSpeed"),
+        goodsSpeed: num("goodsSpeed"),
+        gauge: num("gauge"),
+        stockType: txt("stockType"),
+        turnoutTrack: checked("turnoutTrack"),
+        outerCrossingLimit: checked("outerCrossingLimit"),
+        compoundCa1: num("compoundCa1"),
+        compoundCa2: num("compoundCa2"),
+        compoundCd1: num("compoundCd1"),
+        compoundCd2: num("compoundCd2"),
+        reverseCa1: num("reverseCa1"),
+        reverseCa2: num("reverseCa2"),
+        reverseCd1: num("reverseCd1"),
+        reverseCd2: num("reverseCd2"),
+        reverseStraight: num("reverseStraight"),
+        turnoutType: txt("turnoutType"),
+        turnoutPlacement: txt("turnoutPlacement"),
+        mainCurveDegree: num("mainCurveDegree"),
+        leadRadius: num("leadRadius"),
+        interlockingSpeed: num("interlockingSpeed"),
+        turnoutEqCant: num("turnoutEqCant"),
+        turnoutCase: txt("turnoutCase"),
+        reverseAfterTurnout: txt("reverseAfterTurnout"),
+        hasCrossover: checked("hasCrossover"),
+        hasDiamond: checked("hasDiamond"),
+        diamondApproachStraight: checked("diamondApproachStraight"),
+        existingGradient: num("existingGradient"),
+        rulingGradient: num("rulingGradient"),
+        grade1: num("grade1"),
+        grade2: num("grade2"),
+        verticalGroup: txt("verticalGroup")
+      };
+    }
+
+    function buildReport() {
+      const d = collectData();
+      const checks = [];
+      const cantLimit = getCantLimit(d.routeGroup, d.turnoutTrack);
+      const cdLimit = getCdLimit(d.stockType, d.outerCrossingLimit);
+      const radiusFromVersine = d.versine > 0 ? (125 * d.chordLength * d.chordLength) / d.versine : NaN;
+      const equilibriumCant = d.radius > 0 ? (d.gauge * d.designSpeed * d.designSpeed) / (127 * d.radius) : NaN;
+      const actualCant = roundTo5(Math.min(cantLimit, equilibriumCant || 0));
+      const goodsEquilibriumCant = d.radius > 0 ? (d.gauge * d.goodsSpeed * d.goodsSpeed) / (127 * d.radius) : NaN;
+      const cantExcess = actualCant - goodsEquilibriumCant;
+      const transitionedSpeed = d.radius > 0 ? 0.27 * Math.sqrt(d.radius * (actualCant + cdLimit)) : NaN;
+      const desirableL1 = d.curveType === "nonTransitioned" ? 0.008 * actualCant * transitionedSpeed : 0.0056 * actualCant * transitionedSpeed;
+      const desirableL2 = d.curveType === "nonTransitioned" ? 0.008 * cdLimit * transitionedSpeed : 0.0056 * cdLimit * transitionedSpeed;
+      const desirableL3 = 0.72 * actualCant;
+      const desirableTransition = ceilTo10(Math.max(desirableL1, desirableL2, desirableL3));
+      const minimumTransition = d.curveType === "nonTransitioned"
+        ? Math.max((2 / 3) * Math.max(desirableL1, desirableL2), 0.5 * desirableL3)
+        : Math.max((5 / 6) * Math.max(desirableL1, desirableL2), 0.5 * desirableL3);
+      const shift = d.radius > 0 ? (d.transitionLength * d.transitionLength) / (24 * d.radius) : NaN;
+      const offset = d.radius > 0 && d.transitionLength > 0 ? Math.pow(d.offsetX, 3) / (6 * d.radius * d.transitionLength) : NaN;
+      const bestSpeed = solveBestSpeed(
+        d.radius,
+        d.transitionLength,
+        cantLimit,
+        cdLimit,
+        d.sectionalSpeed,
+        d.curveType === "nonTransitioned"
+      );
+      const compensation = d.radius > 0 ? 70 / d.radius : NaN;
+      const compensatedGradient = d.existingGradient - compensation;
+      const gradeDifference = Math.abs(d.grade1 - d.grade2);
+      const minimumVerticalRadius = d.verticalGroup === "A" ? 4000 : d.verticalGroup === "B" ? 3000 : 2500;
+
+      if (Math.abs(radiusFromVersine - d.radius) > Math.max(5, d.radius * 0.02)) {
+        checks.push({ level: "warn", text: "The input radius and the radius derived from versine differ noticeably. Review geometry before finalizing the report." });
+      } else {
+        checks.push({ level: "ok", text: "Versine-based radius is broadly consistent with the entered radius." });
+      }
+
+      if (equilibriumCant > cantLimit) {
+        checks.push({ level: "warn", text: `Equilibrium cant exceeds the applicable design limit of ${cantLimit} mm, so the provided cant is capped.` });
+      } else {
+        checks.push({ level: "ok", text: `Calculated cant is within the design cant limit of ${cantLimit} mm.` });
+      }
+
+      if (cantExcess > 75) {
+        checks.push({ level: "bad", text: `Cant excess for the goods speed is ${round(cantExcess)} mm, which exceeds the 75 mm limit of Para 404(3).` });
+      } else {
+        checks.push({ level: "ok", text: `Cant excess for the goods speed is within the 75 mm limit.` });
+      }
+
+      if (d.transitionLength < minimumTransition) {
+        checks.push({ level: "bad", text: `The available transition length is below the minimum relaxed value of ${round(minimumTransition)} m.` });
+      } else if (d.transitionLength < desirableTransition) {
+        checks.push({ level: "warn", text: `The available transition length is below the desirable value of ${desirableTransition} m, so speed is governed by the restricted transition check.` });
+      } else {
+        checks.push({ level: "ok", text: `The available transition length meets the desirable transition requirement.` });
+      }
+
+      const compoundTransition = Math.max(
+        0.0056 * Math.abs(d.compoundCa1 - d.compoundCa2) * d.sectionalSpeed,
+        0.0056 * Math.abs(d.compoundCd1 - d.compoundCd2) * d.sectionalSpeed
+      );
+      const reverseTransition = Math.max(
+        0.0056 * (d.reverseCa1 + d.reverseCa2) * d.sectionalSpeed,
+        0.0056 * (d.reverseCd1 + d.reverseCd2) * d.sectionalSpeed
+      );
+
+      const turnoutChecks = [];
+      const turnoutSpeed = turnoutBaseSpeed(d.turnoutType);
+
+      if (d.turnoutPlacement === "inside" && d.turnoutType === "1:8.5") {
+        turnoutChecks.push({ level: "bad", text: "1 in 8.5 turnout shall not be laid from the inside of a curved track." });
+      }
+
+      if (d.turnoutPlacement !== "straight" && (d.turnoutType === "1:12" || d.turnoutType === "1:12TWS") && (d.leadRadius < 350 || d.radius < 350)) {
+        turnoutChecks.push({ level: "bad", text: "For 1 in 12 or flatter turnouts taking off from a curve, both the lead curve radius and the main line curve radius should not be less than 350 m." });
+      }
+
+      if (d.turnoutPlacement === "outside" && d.turnoutType === "1:8.5" && d.mainCurveDegree > 5) {
+        turnoutChecks.push({ level: "bad", text: "1 in 8.5 turnout with curved switches from the outside of a curve is limited to five degree in exceptional circumstances." });
+      }
+
+      if (d.leadRadius < 220) {
+        turnoutChecks.push({ level: "bad", text: "Turn-in curve radius is below the absolute minimum of 220 m." });
+      } else if (d.leadRadius < 350) {
+        turnoutChecks.push({ level: "warn", text: "Turn-in curve radius is below the preferred 350 m and falls in the exceptional allowance band." });
+      } else {
+        turnoutChecks.push({ level: "ok", text: "Turn-in curve radius meets the general 350 m preference." });
+      }
+
+      const turnoutStatus = statusFromChecks(turnoutChecks);
+
+      let mainLineTurnoutCant;
+      if (d.turnoutCase === "similar") {
+        mainLineTurnoutCant = d.turnoutEqCant + 75;
+        if (d.reverseAfterTurnout === "yes") {
+          mainLineTurnoutCant = Math.min(mainLineTurnoutCant, 65);
+          turnoutChecks.push({ level: "warn", text: "Because the similar-flexure turnout is followed by a reverse curve, cant is limited to 65 mm and run-out begins after the crossing." });
+        }
+      } else {
+        mainLineTurnoutCant = Math.max(0, cdLimit - d.turnoutEqCant);
+      }
+
+      const mainLineTurnoutSpeed = d.radius > 0
+        ? Math.min(d.interlockingSpeed, d.sectionalSpeed, 0.27 * Math.sqrt(d.radius * (mainLineTurnoutCant + cdLimit)))
+        : 0;
+
+      const overallStatus = statusFromChecks([...checks, ...turnoutChecks]);
+
+      const report = `
+        <div class="report-card">
+          ${badge(overallStatus, overallStatus === "ok" ? "Overall status: acceptable" : overallStatus === "warn" ? "Overall status: review required" : "Overall status: non-compliant items found")}
+          <div class="kpis">
+            <div class="kpi">
+              <span>Entered radius</span>
+              <strong>${fmt(d.radius, "m")}</strong>
+            </div>
+            <div class="kpi">
+              <span>Permissible speed on curve</span>
+              <strong>${bestSpeed ? fmt(bestSpeed.speed, "km/h", 0) : "Not feasible"}</strong>
+            </div>
+            <div class="kpi">
+              <span>Provided cant / deficiency</span>
+              <strong>${bestSpeed ? `${fmt(bestSpeed.cant, "mm", 0)} / ${fmt(bestSpeed.cantDeficiency, "mm", 0)}` : "Not feasible"}</strong>
+            </div>
+          </div>
+          <h3>${d.curveName} Summary</h3>
+          <table class="report-table">
+            <tr><th>Item</th><th>Result</th></tr>
+            <tr><td>Curve type</td><td>${d.curveType === "transitioned" ? "Fully transitioned" : "Non-transitioned with virtual transition"}</td></tr>
+            <tr><td>Route group</td><td>${d.routeGroup === "AB" ? "Group A / B" : "Other route"}</td></tr>
+            <tr><td>Radius from versine (Para 401)</td><td>${fmt(radiusFromVersine, "m")}</td></tr>
+            <tr><td>Equilibrium cant at design speed (Para 404)</td><td>${fmt(equilibriumCant, "mm")}</td></tr>
+            <tr><td>Adopted cant after cap and 5 mm rounding</td><td>${fmt(actualCant, "mm", 0)}</td></tr>
+            <tr><td>Permissible cant deficiency used</td><td>${fmt(cdLimit, "mm", 0)}</td></tr>
+            <tr><td>Safe speed from cant + deficiency (Para 403)</td><td>${fmt(transitionedSpeed, "km/h")}</td></tr>
+            <tr><td>Governing speed with actual transition length</td><td>${bestSpeed ? fmt(bestSpeed.speed, "km/h", 0) : "No feasible speed found under current constraints"}</td></tr>
+            <tr><td>Desirable transition length (Para 405)</td><td>${fmt(desirableTransition, "m", 0)}</td></tr>
+            <tr><td>Minimum relaxed transition length</td><td>${fmt(minimumTransition, "m")}</td></tr>
+            <tr><td>Shift (Para 405(6)(a))</td><td>${fmt(shift, "m")}</td></tr>
+            <tr><td>Offset at X = ${fmt(d.offsetX, "m")}</td><td>${fmt(offset, "m")}</td></tr>
+            <tr><td>Cant excess at goods speed</td><td>${fmt(cantExcess, "mm")}</td></tr>
+            <tr><td>Compensation for curvature (Para 416)</td><td>${fmt(compensation, "%")}</td></tr>
+            <tr><td>Adjusted gradient after compensation</td><td>${fmt(compensatedGradient, "%")}</td></tr>
+          </table>
+        </div>
+
+        <div class="report-card">
+          <h3>Compliance Notes</h3>
+          <ul>
+            ${checks.map((item) => `<li><strong>${item.level.toUpperCase()}:</strong> ${item.text}</li>`).join("")}
+          </ul>
+        </div>
+
+        <div class="report-card">
+          <h3>Transition and Special Curve Cases</h3>
+          <table class="report-table">
+            <tr><th>Case</th><th>Calculated result</th></tr>
+            <tr><td>Compound curve common transition</td><td>${fmt(compoundTransition, "m")} at ${fmt(d.sectionalSpeed, "km/h", 0)} using the greater of Para 405(8)(a) and (b)</td></tr>
+            <tr><td>Reverse curve common transition</td><td>${fmt(reverseTransition, "m")} at ${fmt(d.sectionalSpeed, "km/h", 0)} using the greater of Para 405(9)(a)(i) and (ii)</td></tr>
+            <tr><td>Reverse transition straight</td><td>${d.reverseStraight >= 50 ? "Meets the 50 m straight recommendation for high-speed Group A/B reverse curves." : "Below 50 m. Speeds above 130 km/h should not be permitted where the straight cannot be removed or increased."}</td></tr>
+            <tr><td>Running out super-elevation</td><td>${d.curveType === "transitioned" ? "Cant is to be run on the transition, not on the straight or circular curve." : "Cant is to be run on the virtual transition."}</td></tr>
+            <tr><td>Reverse curve longitudinal profile</td><td>Case I keeps one rail fixed; Case II keeps the track centre line fixed. Both are noted in Para 406(3).</td></tr>
+          </table>
+        </div>
+
+        <div class="report-card">
+          ${badge(turnoutStatus, turnoutStatus === "ok" ? "Turnout status: acceptable" : turnoutStatus === "warn" ? "Turnout status: conditional" : "Turnout status: non-compliant")}
+          <h3>Turnout and Curved Main Line Review</h3>
+          <table class="report-table">
+            <tr><th>Item</th><th>Result</th></tr>
+            <tr><td>Turnout type</td><td>${d.turnoutType}</td></tr>
+            <tr><td>Base permissible turnout speed (Para 408(4))</td><td>${fmt(turnoutSpeed, "km/h", 0)}</td></tr>
+            <tr><td>Turn-in / lead radius check</td><td>${fmt(d.leadRadius, "m")}</td></tr>
+            <tr><td>Curved main line case</td><td>${d.turnoutCase === "similar" ? "Similar flexure" : "Contrary flexure"}</td></tr>
+            <tr><td>Main line cant at turnout (Paras 409, 411, 412)</td><td>${fmt(mainLineTurnoutCant, "mm")}</td></tr>
+            <tr><td>Main line permissible speed at turnout</td><td>${fmt(mainLineTurnoutSpeed, "km/h")}</td></tr>
+            <tr><td>No change of cant zone</td><td>No cant change should occur from 20 m before the toe of switch to 20 m beyond the nose of crossing.</td></tr>
+          </table>
+          <ul>
+            ${turnoutChecks.map((item) => `<li><strong>${item.level.toUpperCase()}:</strong> ${item.text}</li>`).join("")}
+          </ul>
+        </div>
+
+        <div class="report-card">
+          <h3>Crossover, Diamond, Clearance, and Boards</h3>
+          <ul>
+            <li><strong>Crossover case:</strong> ${d.hasCrossover ? "The same speed and cant are governed by the inner road, with the outer road raised to keep both roads in one inclined plane where possible." : "Not selected for this report."}</li>
+            <li><strong>Diamond crossing case:</strong> ${d.hasDiamond ? "Approach curves should be without cant for at least 20 m on either side, with cant run-out beyond that length. Speed on the approach shall not exceed 65 km/h." : "Not selected for this report."}</li>
+            <li><strong>Diamond unrestricted straight approach:</strong> ${d.diamondApproachStraight ? "Minimum 50 m straight before the diamond approach is marked available." : "If the diamond is on a straight approach to a curve, keep a minimum 50 m straight before the heel of the acute crossing for unrestricted diamond speed."}</li>
+            <li><strong>Curve board data:</strong> Radius ${fmt(d.radius, "m")}, curve length ${fmt(d.curveLength, "m")}, transition length ${fmt(d.transitionLength, "m")}, cant ${fmt(actualCant, "mm", 0)}.</li>
+            <li><strong>Rail post guidance:</strong> Show beginning and end of transition, or beginning and end of virtual transition on non-transitioned curves.</li>
+            <li><strong>Cant markings:</strong> Show cant values on the inner rail web starting from zero at the transition start and at every versine station.</li>
+            <li><strong>Extra clearance:</strong> Additional lateral clearances on curves are required between adjacent tracks and between track and fixed structures as per Schedule of Dimensions.</li>
+          </ul>
+        </div>
+
+        <div class="report-card">
+          <h3>Gradient and Vertical Curve Review</h3>
+          <table class="report-table">
+            <tr><th>Item</th><th>Result</th></tr>
+            <tr><td>Existing gradient + compensation compared with ruling gradient</td><td>${(d.existingGradient + compensation) > d.rulingGradient ? "Compensation is required because the combined value exceeds the ruling gradient." : "Compensation may not be required because the combined value does not exceed the ruling gradient."}</td></tr>
+            <tr><td>Compensated gradient</td><td>${fmt(compensatedGradient, "%")}</td></tr>
+            <tr><td>Algebraic difference between grades</td><td>${fmt(gradeDifference, "%")}</td></tr>
+            <tr><td>Vertical curve requirement</td><td>${gradeDifference >= 0.4 ? "Vertical curve required." : "Vertical curve not mandatory under Para 417."}</td></tr>
+            <tr><td>Minimum vertical curve radius</td><td>${fmt(minimumVerticalRadius, "m", 0)}</td></tr>
+          </table>
+        </div>
+      `;
+
+      el("report").innerHTML = report;
+    }
+
+    function resetDefaults() {
+      ids.forEach((id) => {
+        if (el(id).type === "checkbox") {
+          el(id).checked = defaultState[id];
+        } else {
+          el(id).value = defaultState[id];
+        }
+      });
+      buildReport();
+    }
+
+    ids.forEach((id) => {
+      const node = el(id);
+      defaultState[id] = node.type === "checkbox" ? node.checked : node.value;
+      node.addEventListener("input", buildReport);
+      node.addEventListener("change", buildReport);
+    });
+
+    el("generateBtn").addEventListener("click", buildReport);
+    el("resetBtn").addEventListener("click", resetDefaults);
+    el("printBtn").addEventListener("click", () => window.print());
+
+    buildReport();
+  </script>
 </body>
 </html>
