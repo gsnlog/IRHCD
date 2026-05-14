@@ -3,460 +3,1023 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Curve Design and ROC Report</title>
-  <link rel="stylesheet" href="app.css">
+  <title>Curve Design & ROC Report - MS Office Style</title>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/ribbon.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* Additional page-specific styles */
+    .app-page[hidden] {
+      display: none;
+    }
+
+    .report {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-lg);
+    }
+
+    .report-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow-1);
+    }
+
+    .report-table {
+      width: 100%;
+      margin-top: var(--spacing-lg);
+    }
+
+    .badge {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .grid-responsive {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--spacing-lg);
+    }
+
+    .input-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--spacing-lg);
+    }
+
+    .empty {
+      text-align: center;
+      padding: var(--spacing-2xl);
+      color: var(--color-text-tertiary);
+      border: 2px dashed var(--color-border);
+      border-radius: 4px;
+      background: var(--color-surface-secondary);
+    }
+
+    .calc-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .calc-step {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-surface);
+    }
+
+    .calc-step:last-child {
+      border-bottom: none;
+    }
+
+    .calc-index {
+      background: var(--color-surface-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--color-text);
+      padding: var(--spacing-md);
+      border-right: 1px solid var(--color-border);
+    }
+
+    .calc-content {
+      padding: var(--spacing-md) var(--spacing-lg);
+    }
+
+    .calc-formula, .calc-result {
+      font-family: monospace;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      margin: var(--spacing-sm) 0;
+    }
+
+    .status-chip {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      margin-right: var(--spacing-sm);
+    }
+
+    .status-chip.ok {
+      background: rgba(16, 124, 16, 0.2);
+      color: var(--color-success);
+    }
+
+    .status-chip.warn {
+      background: rgba(255, 185, 0, 0.2);
+      color: var(--color-warning);
+    }
+
+    .status-chip.bad {
+      background: rgba(218, 59, 1, 0.2);
+      color: var(--color-error);
+    }
+
+    .kpi {
+      background: var(--color-surface-secondary);
+      padding: var(--spacing-lg);
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .kpi-value {
+      font-size: var(--font-size-2xl);
+      font-weight: 600;
+      color: var(--color-primary);
+      margin: var(--spacing-md) 0;
+    }
+
+    .kpi-label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+  </style>
 </head>
-<body>
-  <div class="ms-app">
-    <header class="ms-suite-bar">
-      <div class="ms-app-launcher">
-        <svg width="16" height="16" viewBox="0 0 16 16"><path fill="white" d="M0 0h4v4H0V0zm6 0h4v4H6V0zm6 0h4v4h-4V0zM0 6h4v4H0V6zm6 0h4v4H6V6zm6 0h4v4h-4V6zM0 12h4v4H0v-4zm6 0h4v4H6v-4zm6 0h4v4h-4v-4z"/></svg>
+<body class="light-mode">
+  
+  <!-- Office Ribbon -->
+  <div class="office-ribbon">
+    <div class="ribbon-header">
+      <div class="ribbon-logo">
+        <div class="ribbon-logo-icon">📐</div>
+        <span>Curve Designer</span>
       </div>
-      <div class="ms-app-title">Rail Design Toolkit</div>
-      <div class="ms-search-box">
-        <input type="text" placeholder="Search for designs...">
+      <div class="flex gap-1 items-center">
+        <button class="btn btn-secondary btn-icon" id="themeToggleBtn" title="Toggle Theme">🌙</button>
+        <button class="btn btn-secondary btn-icon" id="exportDataBtn" title="Export Data">💾</button>
+        <button class="btn btn-secondary btn-icon" id="importBtn" title="Import Data">📂</button>
       </div>
-      <div class="ms-user-profile">JS</div>
-    </header>
+    </div>
 
-    <div class="ms-body">
-      <aside class="ms-side-rail">
-        <div class="ms-nav-item active" id="nav-editor" title="Design Editor">🏗️</div>
-        <div class="ms-nav-item" title="Recent Projects">📁</div>
-        <div class="ms-nav-item" id="nav-about" title="About">ℹ️</div>
-        <div class="ms-nav-item" title="Settings">⚙️</div>
-      </aside>
+    <!-- Ribbon Tabs -->
+    <div class="ribbon-tabs">
+      <div class="ribbon-tab-list" role="tablist" aria-label="Ribbon Tabs">
+        <button class="ribbon-tab" data-tab="home">Home</button>
+        <button class="ribbon-tab" data-tab="tools">Tools</button>
+        <button class="ribbon-tab" data-tab="view">View</button>
+      </div>
+      <button class="ribbon-minimize-btn" id="ribbonMinimizeBtn" type="button" aria-pressed="false" title="Minimize Ribbon">
+        <span class="ribbon-minimize-icon" aria-hidden="true">⌃</span>
+        <span class="ribbon-minimize-label">Minimize</span>
+      </button>
+    </div>
 
-      <aside class="ms-side-panel">
-        <div class="ms-side-panel-header">Project Setup</div>
-        <div class="ms-side-panel-content">
-          <div class="section-block">
-            <div class="section-label">👤 General Info</div>
-            <p class="section-intro">Global route assumptions.</p>
-            <div class="field">
-              <label for="curveName">Curve name</label>
-              <input id="curveName" type="text" value="Curve A">
-            </div>
-            <div class="field">
-              <label for="routeGroup">Route group</label>
-              <select id="routeGroup">
-                <option value="AB">Group A / B</option>
-                <option value="Other">Other route</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="curveType">Curve type</label>
-              <select id="curveType">
-                <option value="transitioned">Fully transitioned</option>
-                <option value="nonTransitioned">Non-transitioned</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="sectionalSpeed">Speed limit (km/h)</label>
-              <input id="sectionalSpeed" type="number" min="0" value="110">
-            </div>
-          </div>
-          
-          <div class="section-block" style="margin-top: 1.2rem;">
-            <div class="section-label">📋 Design Cases</div>
-            <div class="checkbox">
-              <input id="hasCompoundCurve" type="checkbox">
-              <label for="hasCompoundCurve">Compound Curve</label>
-            </div>
-            <div class="checkbox">
-              <input id="hasReverseCurve" type="checkbox">
-              <label for="hasReverseCurve">Reverse Curve</label>
-            </div>
-            <div class="checkbox">
-              <input id="turnoutTrack" type="checkbox">
-              <label for="turnoutTrack">Turnout on Track</label>
-            </div>
-            <div class="checkbox">
-              <input id="hasCrossover" type="checkbox">
-              <label for="hasCrossover">Crossover Case</label>
-            </div>
-            <div class="checkbox">
-              <input id="hasDiamond" type="checkbox">
-              <label for="hasDiamond">Diamond Crossing</label>
-            </div>
-            <div class="checkbox hidden" id="outerCrossingLimitRow">
-              <input id="outerCrossingLimit" type="checkbox">
-              <label for="outerCrossingLimit">Outer rail crossing (115mm cap)</label>
-            </div>
-          </div>
+    <!-- Ribbon Content -->
+    <div class="ribbon-content active" data-tab="home">
+      <!-- Design Group -->
+      <div class="ribbon-group">
+        <div class="ribbon-buttons">
+          <button class="ribbon-button" id="generateReportBtn" title="Generate Full Report">
+            <div class="ribbon-button-icon">⚙️</div>
+            <div class="ribbon-button-label">Generate</div>
+          </button>
+          <button class="ribbon-button" id="resetReportBtn" title="Reset to Default">
+            <div class="ribbon-button-icon">🔄</div>
+            <div class="ribbon-button-label">Reset</div>
+          </button>
         </div>
-      </aside>
+        <div class="ribbon-group-label">Design</div>
+      </div>
 
-      <main class="ms-workspace">
-        <div class="ms-ribbon">
-          <div class="ms-ribbon-top">
-            <div class="ms-doc-name">Design Report - Rail Geometry</div>
-          </div>
-          <div class="ms-ribbon-bottom">
-            <div class="input-tabs">
-              <button id="tab-btn-basis" class="tab-btn active" data-target="tab-basis">Basic Geometry</button>
-              <button id="tab-btn-extended" class="tab-btn hidden" data-target="tab-extended">Extended Details</button>
-              <button id="tab-btn-special" class="tab-btn hidden" data-target="tab-special">Track Features</button>
-              <button id="tab-btn-vertical" class="tab-btn" data-target="tab-vertical">Vertical</button>
-            </div>
-            <div class="ms-command-bar">
-              <button class="ms-cmd-btn primary" id="generateBtn" title="Generate Report">
-                Analyze
-              </button>
-              <button class="ms-cmd-btn" id="printBtn" title="Print Report">
-                Print
-              </button>
-              <button class="ms-cmd-btn" id="resetBtn" title="Reset to Defaults">
-                Reset
-              </button>
-            </div>
-          </div>
+      <!-- Report Group -->
+      <div class="ribbon-group">
+        <div class="ribbon-buttons">
+          <button class="ribbon-button" id="printReportBtn" title="Print Report">
+            <div class="ribbon-button-icon">🖨️</div>
+            <div class="ribbon-button-label">Print</div>
+          </button>
+          <button class="ribbon-button" id="exportReportBtn" title="Create Professional Report">
+            <div class="ribbon-button-icon">📊</div>
+            <div class="ribbon-button-label">Professional</div>
+          </button>
+          <button class="ribbon-button" id="pdfRibbonBtn" title="Open PDF Report">
+            <div class="ribbon-button-icon">PDF</div>
+            <div class="ribbon-button-label">PDF</div>
+          </button>
         </div>
+        <div class="ribbon-group-label">Report</div>
+      </div>
 
-        <div class="ms-content">
-          <div id="editor-view" class="layout">
-            <div class="panel">
-              <div class="panel-head">
-                <div class="panel-title">
-                  <h2>📏 Design Parameters</h2>
-                  <p>Configure project route and base geometric requirements.</p>
-                </div>
-              </div>
-
-        <details class="helper-card collapsible soft-toggle">
-          <summary>
-            <div class="summary-copy">
-              <strong>❓ Quick help and navigation tips</strong>
-              <span>Hidden by default so the page stays clean. Open when you need guidance.</span>
-            </div>
-          </summary>
-          <div class="collapsible-body">
-            <p>Configure project parameters below. Specialized tools are accessible via the ribbon tabs above.</p>
-            <ul class="helper-list">
-              <li>Hover or focus the small <span class="tip" data-tip="Short field explanation.">?</span> icons for guidance.</li>
-              <li>The report refreshes automatically as you edit values.</li>
-            </ul>
-          </div>
-        </details>
-
-        <div id="tab-basis" class="tab-content active">
-        <div class="section-block compact-grid">
-          <div class="section-label">📐 Core Alignment</div>
-          <p class="section-intro">Primary geometric inputs for validation.</p>
-          <div class="grid">
-            <div class="field">
-              <label for="radius"><span class="field-title">Radius R (m) <span class="tip" tabindex="0" data-tip="Main design radius used for cant, permissible speed, turnout, and gradient checks.">?</span></span></label>
-              <input id="radius" type="number" min="0" step="0.01" value="600">
-            </div>
-            <div class="field">
-              <label for="curveLength">Curve length (m)</label>
-              <input id="curveLength" type="number" min="0" step="0.01" value="320">
-            </div>
-            <div class="field">
-              <label for="chordLength"><span class="field-title">Chord length C (m) for versine <span class="tip" tabindex="0" data-tip="Together with versine, this is used to derive a check radius under Para 401.">?</span></span></label>
-              <input id="chordLength" type="number" min="0" step="0.01" value="20">
-            </div>
-            <div class="field">
-              <label for="versine"><span class="field-title">Versine V (mm) <span class="tip" tabindex="0" data-tip="Enter measured or assumed versine to compare the derived radius with the entered radius.">?</span></span></label>
-              <input id="versine" type="number" min="0" step="0.01" value="8.33">
-            </div>
-            <div class="field">
-              <label for="transitionLength"><span class="field-title">Actual transition length L (m) <span class="tip" tabindex="0" data-tip="This is the real transition length available on site and is used to test desirable and minimum criteria.">?</span></span></label>
-              <input id="transitionLength" type="number" min="0" step="0.01" value="70">
-            </div>
-            <div class="field">
-              <label for="offsetX"><span class="field-title">Offset checkpoint X (m) <span class="tip" tabindex="0" data-tip="Distance from the transition origin where the offset should be reported.">?</span></span></label>
-              <input id="offsetX" type="number" min="0" step="0.01" value="20">
-            </div>
-          </div>
-          <div id="about-view" class="hidden">
-            <div class="panel">
-              <h2>ℹ️ About Rail Design Toolkit</h2>
-              <p>This toolkit provides automated geometry checks and reporting for rail designers. It focuses on the following Codal references:</p>
-              <div class="stats" style="margin-top: 24px;">
-                <div class="stat">
-                  <span class="hint">Geometry</span>
-                  <strong>Para 401</strong>
-                </div>
-                <div class="stat">
-                  <span class="hint">Speed and cant</span>
-                  <strong>Paras 403-405</strong>
-                </div>
-                <div class="stat">
-                  <span class="hint">Turnout checks</span>
-                  <strong>Paras 408-414</strong>
-                </div>
-                <div class="stat">
-                  <span class="hint">Vertical alignment</span>
-                  <strong>Paras 416-417</strong>
-                </div>
-              </div>
-            </div>
-          </div>
+      <!-- Check Group -->
+      <div class="ribbon-group">
+        <div class="ribbon-buttons">
+          <button class="ribbon-button" id="checkGenerateBtn" title="Check Existing Curve">
+            <div class="ribbon-button-icon">✓</div>
+            <div class="ribbon-button-label">Verify</div>
+          </button>
+          <button class="ribbon-button" id="checkResetBtn" title="Reset Check">
+            <div class="ribbon-button-icon">🔄</div>
+            <div class="ribbon-button-label">Reset</div>
+          </button>
         </div>
+        <div class="ribbon-group-label">Check</div>
+      </div>
+    </div>
 
-        <div class="section-block" style="margin-top: 1rem;">
-          <div class="section-label">⚡ Speed & Cant Basis</div>
-          <div class="grid">
-            <div class="field">
-              <label for="designSpeed">Design Speed (km/h)</label>
-              <input id="designSpeed" type="number" min="0" step="0.01" value="85">
-            </div>
-            <div class="field">
-              <label for="goodsSpeed">Goods Speed (km/h)</label>
-              <input id="goodsSpeed" type="number" min="0" step="0.01" value="45">
-            </div>
-            <div class="field">
-              <label for="gauge">Gauge (mm)</label>
-              <input id="gauge" type="number" min="0" step="0.01" value="1750">
-            </div>
-            <div class="field">
-              <label for="stockType">Cant Deficiency Class</label>
-              <select id="stockType">
-                <option value="75">Other stock - 75 mm</option>
-                <option value="100">Nominated stock - 100 mm</option>
-                <option value="115">Nominated stock - 115 mm</option>
-                <option value="150">Nominated stock - 150 mm</option>
-              </select>
-            </div>
-          </div>
+    <div class="ribbon-content" data-tab="tools">
+      <div class="ribbon-group">
+        <div class="ribbon-group-label">Calculation</div>
+        <div class="ribbon-buttons">
+          <button class="ribbon-button" title="Calculate All">
+            <div class="ribbon-button-icon">🧮</div>
+            <div class="ribbon-button-label">Calc</div>
+          </button>
         </div>
+      </div>
+    </div>
+
+    <div class="ribbon-content" data-tab="view">
+      <div class="ribbon-group">
+        <div class="ribbon-group-label">Theme</div>
+        <div class="ribbon-buttons">
+          <button class="ribbon-button" id="themeRibbonBtn" title="Toggle Theme">
+            <div class="ribbon-button-icon">🎨</div>
+            <div class="ribbon-button-label">Theme</div>
+          </button>
         </div>
-
-        <!-- New Dedicated Extended Tab -->
-        <div id="tab-extended" class="tab-content">
-          <div id="compoundCurveFields" class="section-block hidden">
-            <div class="section-label">🔗 Compound Curve Detail</div>
-            <div class="grid">
-                <div class="field">
-                  <label for="compoundRadius1">R1 (m)</label>
-                  <input id="compoundRadius1" type="number" value="600">
-                </div>
-                <div class="field">
-                  <label for="compoundSpeed1">V1 (km/h)</label>
-                  <input id="compoundSpeed1" type="number" value="85">
-                </div>
-                <div class="field">
-                  <label for="compoundRadius2">R2 (m)</label>
-                  <input id="compoundRadius2" type="number" value="900">
-                </div>
-                <div class="field">
-                  <label for="compoundSpeed2">V2 (km/h)</label>
-                  <input id="compoundSpeed2" type="number" value="85">
-                </div>
-            </div>
-          </div>
-          <div id="reverseCurveFields" class="section-block hidden" style="margin-top:0.8rem;">
-            <div class="section-label">↩️ Reverse Curve Detail</div>
-            <div class="grid">
-                <div class="field">
-                  <label for="reverseRadius1">R1 (m)</label>
-                  <input id="reverseRadius1" type="number" value="600">
-                </div>
-                <div class="field">
-                  <label for="reverseSpeed1">V1 (km/h)</label>
-                  <input id="reverseSpeed1" type="number" value="85">
-                </div>
-                <div class="field">
-                  <label for="reverseRadius2">R2 (m)</label>
-                  <input id="reverseRadius2" type="number" value="700">
-                </div>
-                <div class="field">
-                  <label for="reverseSpeed2">V2 (km/h)</label>
-                  <input id="reverseSpeed2" type="number" value="85">
-                </div>
-                <div class="field">
-                  <label for="reverseStraight">Straight (m)</label>
-                  <input id="reverseStraight" type="number" value="60">
-                </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="tab-special" class="tab-content">
-        <div class="section-block">
-          <div class="section-label">🛤️ Track Features</div>
-          <div class="sub-block">
-            <div class="sub-block-title">🔀 Turnout Setup</div>
-            <div class="grid">
-                <div class="field">
-                  <label for="compoundRadius1">Compound curve 1 radius (m)</label>
-                  <input id="compoundRadius1" type="number" min="0" step="0.01" value="600">
-                </div>
-                <div class="field">
-                  <label for="compoundSpeed1">Compound curve 1 design speed (km/h)</label>
-                  <input id="compoundSpeed1" type="number" min="0" step="0.01" value="85">
-                </div>
-                <div class="field">
-                  <label for="compoundRadius2">Compound curve 2 radius (m)</label>
-                  <input id="compoundRadius2" type="number" min="0" step="0.01" value="900">
-                </div>
-                <div class="field">
-                  <label for="compoundSpeed2">Compound curve 2 design speed (km/h)</label>
-                  <input id="compoundSpeed2" type="number" min="0" step="0.01" value="85">
-                </div>
-              </div>
-
-              <div class="checkbox">
-                <input id="hasReverseCurve" type="checkbox">
-                <label for="hasReverseCurve">Reverse curve case is present, so calculate transition from two opposite curves</label>
-              </div>
-              <div class="grid hidden" id="reverseCurveFields" style="margin-top: 11px;">
-                <div class="field">
-                  <label for="reverseRadius1">Reverse curve 1 radius (m)</label>
-                  <input id="reverseRadius1" type="number" min="0" step="0.01" value="600">
-                </div>
-                <div class="field">
-                  <label for="reverseSpeed1">Reverse curve 1 design speed (km/h)</label>
-                  <input id="reverseSpeed1" type="number" min="0" step="0.01" value="85">
-                </div>
-                <div class="field">
-                  <label for="reverseRadius2">Reverse curve 2 radius (m)</label>
-                  <input id="reverseRadius2" type="number" min="0" step="0.01" value="700">
-                </div>
-                <div class="field">
-                  <label for="reverseSpeed2">Reverse curve 2 design speed (km/h)</label>
-                  <input id="reverseSpeed2" type="number" min="0" step="0.01" value="85">
-                </div>
-                <div class="field">
-                  <label for="reverseStraight"><span class="field-title">Straight between reverse transitions (m) <span class="tip" tabindex="0" data-tip="Useful mainly for higher-speed reverse curves where a straight is recommended between transitions.">?</span></span></label>
-                  <input id="reverseStraight" type="number" min="0" step="0.01" value="60">
-                </div>
-              </div>
-            </div>
-
-            <div class="sub-block">
-              <div class="sub-block-title">🚂 Turnout And Curved Main Line</div>
-              <div class="grid">
-                <div class="field">
-                  <label for="turnoutType">Turnout type</label>
-                  <select id="turnoutType">
-                    <option value="1:12">1 in 12 curved switch</option>
-                    <option value="1:8.5">1 in 8.5 curved switch</option>
-                    <option value="1:8.5TWS">1 in 8.5 thick web curved switch on emergency crossover</option>
-                    <option value="1:8.5Sym">1 in 8.5 symmetrical split</option>
-                    <option value="1:12TWS">1 in 12 TWS</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="turnoutPlacement">Turnout takes off from</label>
-                  <select id="turnoutPlacement">
-                    <option value="straight">Straight track</option>
-                    <option value="outside">Outside of curve</option>
-                    <option value="inside">Inside of curve</option>
-                  </select>
-                </div>
-                <div class="field hidden" id="mainCurveDegreeField">
-                  <label for="mainCurveDegree"><span class="field-title">Main line curve degree <span class="tip" tabindex="0" data-tip="Needed only for the 1 in 8.5 turnout taking off from the outside of a curve.">?</span></span></label>
-                  <input id="mainCurveDegree" type="number" min="0" step="0.01" value="4">
-                </div>
-                <div class="field">
-                  <label for="leadRadius"><span class="field-title">Resultant lead / turn-in curve radius (m) <span class="tip" tabindex="0" data-tip="Compared with the turnout minimum and preferred radius limits.">?</span></span></label>
-                  <input id="leadRadius" type="number" min="0" step="0.01" value="350">
-                </div>
-                <div class="field">
-                  <label for="interlockingSpeed">Interlocking permitted run-through speed (km/h)</label>
-                  <input id="interlockingSpeed" type="number" min="0" step="0.01" value="30">
-                </div>
-                <div class="field">
-                  <label for="turnoutEqCant">Turnout equilibrium cant from Schedule of Dimensions (mm)</label>
-                  <input id="turnoutEqCant" type="number" min="0" step="0.01" value="35">
-                </div>
-                <div class="field">
-                  <label for="turnoutCase">Curved main line at turnout case</label>
-                  <select id="turnoutCase">
-                    <option value="similar">Similar flexure</option>
-                    <option value="contrary">Contrary flexure</option>
-                  </select>
-                </div>
-                <div class="field hidden" id="reverseAfterTurnoutField">
-                  <label for="reverseAfterTurnout"><span class="field-title">Turnout is followed by reverse curve <span class="tip" tabindex="0" data-tip="Relevant for similar-flexure cases because a reverse curve can further limit cant.">?</span></span></label>
-                  <select id="reverseAfterTurnout">
-                    <option value="no">No</option>
-                    <option value="yes">Yes</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div class="sub-block">
-              <div class="sub-block-title">✕ Optional Crossing Cases</div>
-              <div class="checkbox">
-                <input id="hasCrossover" type="checkbox">
-                <label for="hasCrossover">Curve includes crossover road case</label>
-              </div>
-              <div class="checkbox">
-                <input id="hasDiamond" type="checkbox">
-                <label for="hasDiamond">Curve includes diamond crossing case</label>
-              </div>
-              <div class="checkbox hidden" id="diamondApproachStraightRow">
-                <input id="diamondApproachStraight" type="checkbox">
-                <label for="diamondApproachStraight">Diamond is on straight approach with minimum 50 m straight before curve</label>
-              </div>
-            </div>
-          </div>
-        </details>
-        </div>
-        </div>
-
-        <div id="tab-vertical" class="tab-content">
-        <details class="section-block collapsible">
-          <summary>
-            <div class="summary-copy">
-              <strong>📊 Gradient and vertical curve</strong>
-              <span>Open this section when you want compensation-for-curvature and vertical alignment checks.</span>
-            </div>
-          </summary>
-          <div class="collapsible-body">
-            <div class="section-label">📈 Gradient And Vertical Curve</div>
-            <p class="section-intro">These values are kept tucked away because they are usually reviewed after the main curve geometry is set.</p>
-            <div class="grid">
-              <div class="field">
-                <label for="existingGradient">Existing gradient (%)</label>
-                <input id="existingGradient" type="number" step="0.001" value="0.5">
-              </div>
-              <div class="field">
-                <label for="rulingGradient">Ruling gradient (%)</label>
-                <input id="rulingGradient" type="number" step="0.001" value="0.5">
-              </div>
-              <div class="field">
-                <label for="grade1">Grade 1 (%)</label>
-                <input id="grade1" type="number" step="0.001" value="0.2">
-              </div>
-              <div class="field">
-                <label for="grade2">Grade 2 (%)</label>
-                <input id="grade2" type="number" step="0.001" value="-0.3">
-              </div>
-              <div class="field">
-                <label for="verticalGroup">Vertical curve route class</label>
-                <select id="verticalGroup">
-                  <option value="A">Group A</option>
-                  <option value="B">Group B</option>
-                  <option value="CDE">Group C / D / E</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </details>
-        </div>
-
-            <div class="panel">
-              <div class="panel-head">
-                <div class="panel-title">
-                  <h2>📋 Live Analysis</h2>
-                  <p>Engineering report generated per Codal Paras 401-417.</p>
-                </div>
-              </div>
-              <div id="report" class="report">
-                <div class="empty">Adjust design parameters to generate the report.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
+      </div>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <!-- Main Container -->
+  <div class="office-container">
+    
+    <!-- Left Sidebar -->
+    <aside class="office-sidebar">
+      <div class="sidebar-header">Project Setup</div>
+      <nav class="sidebar-nav">
+        <li class="sidebar-nav-item">
+          <button data-target="designPage">
+            <span class="sidebar-nav-icon">📐</span>
+            <span class="sidebar-nav-label">Design Curve</span>
+          </button>
+        </li>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-header">Navigation</div>
+      <nav class="sidebar-nav">
+        <li class="sidebar-nav-item">
+          <button data-target="compoundPage">
+            <span class="sidebar-nav-icon">🔀</span>
+            <span class="sidebar-nav-label">Compound Curve</span>
+          </button>
+        </li>
+        <li class="sidebar-nav-item">
+          <button data-target="reversePage">
+            <span class="sidebar-nav-icon">↩️</span>
+            <span class="sidebar-nav-label">Reverse Curve</span>
+          </button>
+        </li>
+        <li class="sidebar-nav-item">
+          <button data-target="checkPage">
+            <span class="sidebar-nav-icon">✓</span>
+            <span class="sidebar-nav-label">Check Curve</span>
+          </button>
+        </li>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-header">Help</div>
+      <nav class="sidebar-nav">
+        <li class="sidebar-nav-item">
+          <a href="#" id="guideBtn" title="Documentation">
+            <span class="sidebar-nav-icon">📖</span>
+            <span class="sidebar-nav-label">Guide</span>
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="#" id="faqBtn" title="FAQ">
+            <span class="sidebar-nav-icon">❓</span>
+            <span class="sidebar-nav-label">FAQ</span>
+          </a>
+        </li>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="office-main">
+      <div class="office-content">
+        
+        <!-- Design Page -->
+        <section class="app-page" id="designPage">
+          <div class="office-panel">
+            <div class="office-panel-header">
+              <h1>Curve Design and ROC Full Report</h1>
+              <p class="office-panel-subtitle">Design new curves based on Curves & Turnouts specifications</p>
+            </div>
+
+            <!-- Input Panel -->
+            <div class="office-panel">
+              <h2>Input Data</h2>
+
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="curveName">Curve / Location Name</label>
+                  <input type="text" id="curveName" value="Curve A">
+                </div>
+                <div class="form-group">
+                  <label for="problemType">Design Problem Type</label>
+                  <select id="problemType">
+                    <option value="standard">Standard cant and transition design</option>
+                    <option value="minimumRadius">Minimum radius for unrestricted speed</option>
+                    <option value="restrictedTransition">Restricted transition / speed optimization</option>
+                    <option value="trafficWeighted">Traffic-weighted equilibrium cant</option>
+                    <option value="turnoutCrossover">Turnout / crossover design review</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="trackStandard">Track Standard</label>
+                  <select id="trackStandard">
+                    <option value="BG">Broad Gauge (BG)</option>
+                    <option value="MG">Meter Gauge (MG)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="routeGroup">Route Group</label>
+                  <select id="routeGroup">
+                    <option value="AB">Group A / B</option>
+                    <option value="Other">Other route</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="curveType">Curve Type</label>
+                  <select id="curveType">
+                    <option value="transitioned">Fully transitioned</option>
+                    <option value="nonTransitioned">Non-transitioned with virtual transition</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="sectionalSpeed">Sectional Speed (km/h)</label>
+                  <input type="number" id="sectionalSpeed" min="0" value="110">
+                </div>
+              </div>
+
+              <h3 class="mt-4">Geometry</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="radius">Radius R (m)</label>
+                  <input type="number" id="radius" min="0" step="0.01" value="600">
+                </div>
+                <div class="form-group">
+                  <label for="curveLength">Curve Length (m)</label>
+                  <input type="number" id="curveLength" min="0" step="0.01" value="320">
+                </div>
+                <div class="form-group">
+                  <label for="chordLength">Chord Length C (m)</label>
+                  <input type="number" id="chordLength" min="0" step="0.01" value="20">
+                </div>
+                <div class="form-group">
+                  <label for="offsetX">Offset Checkpoint X (m)</label>
+                  <input type="number" id="offsetX" min="0" step="0.01" value="20">
+                </div>
+              </div>
+
+              <h3 class="mt-4">Speed and Cant Basis</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="designSpeed">Design Speed (km/h)</label>
+                  <input type="number" id="designSpeed" min="0" step="0.01" value="85">
+                </div>
+                <div class="form-group">
+                  <label for="goodsSpeed">Goods Speed (km/h)</label>
+                  <input type="number" id="goodsSpeed" min="0" step="0.01" value="45">
+                </div>
+                <div class="form-group">
+                  <label for="gauge">Dynamic Gauge G (mm)</label>
+                  <input type="number" id="gauge" min="0" step="0.01" value="1750">
+                </div>
+                <div class="form-group">
+                  <label for="stockType">Cant Deficiency Class</label>
+                  <select id="stockType">
+                    <option value="75">Other stock - 75 mm</option>
+                    <option value="100">Nominated stock - 100 mm</option>
+                    <option value="115">Nominated stock - 115 mm</option>
+                    <option value="150">Nominated stock - 150 mm</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="checkbox-group mt-4">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="turnoutTrack">
+                  <label for="turnoutTrack">Curve has turnout on track (limit cant to 140 mm)</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="outerCrossingLimit">
+                  <label for="outerCrossingLimit">150 mm class affected by turnout crossing (cap at 115 mm)</label>
+                </div>
+              </div>
+
+              <h3 class="mt-4">Special Cases</h3>
+              <div class="checkbox-group">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="enableTurnout">
+                  <label for="enableTurnout">Turnout case</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="hasCrossover">
+                  <label for="hasCrossover">Crossover road</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="hasDiamond">
+                  <label for="hasDiamond">Diamond crossing</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="enableRestrictedTransition">
+                  <label for="enableRestrictedTransition">Restricted transition</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="enableTrafficMix">
+                  <label for="enableTrafficMix">Traffic mix cant</label>
+                </div>
+              </div>
+
+              <!-- Additional fields for special cases -->
+              <div id="enableRestrictedTransition-section" data-case-section="enableRestrictedTransition" hidden style="margin-top: var(--spacing-lg); padding: var(--spacing-lg); background: var(--color-surface-secondary); border-radius: 4px;">
+                <h4>Restricted Transition Details</h4>
+                <div class="form-group">
+                  <label for="restrictedTransitionLength">Available Transition L (m)</label>
+                  <input type="number" id="restrictedTransitionLength" min="0" step="0.01" value="50">
+                </div>
+              </div>
+
+
+
+
+
+              <div id="enableTurnout-section" data-case-section="enableTurnout" hidden style="margin-top: var(--spacing-lg); padding: var(--spacing-lg); background: var(--color-surface-secondary); border-radius: 4px;">
+                <h4>Turnout Details</h4>
+                <div class="input-group">
+                  <div class="form-group">
+                    <label for="turnoutType">Turnout Type</label>
+                    <select id="turnoutType">
+                      <option value="1:12">1 in 12 curved switch</option>
+                      <option value="1:8.5">1 in 8.5 curved switch</option>
+                      <option value="1:8.5TWS">1 in 8.5 thick web</option>
+                      <option value="1:8.5Sym">1 in 8.5 symmetrical split</option>
+                      <option value="1:12TWS">1 in 12 TWS</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="turnoutPlacement">Turnout Placement</label>
+                    <select id="turnoutPlacement">
+                      <option value="straight">Straight track</option>
+                      <option value="outside">Outside of curve</option>
+                      <option value="inside">Inside of curve</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="mainCurveDegree">Main Curve Degree</label>
+                    <input type="number" id="mainCurveDegree" min="0" step="0.01" value="4">
+                  </div>
+                  <div class="form-group">
+                    <label for="leadRadius">Lead Radius (m)</label>
+                    <input type="number" id="leadRadius" min="0" step="0.01" value="350">
+                  </div>
+                  <div class="form-group">
+                    <label for="interlockingSpeed">Interlocking Speed (km/h)</label>
+                    <input type="number" id="interlockingSpeed" min="0" step="0.01" value="30">
+                  </div>
+                  <div class="form-group">
+                    <label for="turnoutEqCant">Turnout Cant (mm)</label>
+                    <input type="number" id="turnoutEqCant" min="0" step="0.01" value="35">
+                  </div>
+                  <div class="form-group">
+                    <label for="turnoutCase">Turnout Case</label>
+                    <select id="turnoutCase">
+                      <option value="similar">Similar flexure</option>
+                      <option value="contrary">Contrary flexure</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="reverseAfterTurnout">Reverse After Turnout</label>
+                    <select id="reverseAfterTurnout">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div id="hasDiamond-section" data-case-section="hasDiamond" hidden style="margin-top: var(--spacing-lg); padding: var(--spacing-lg); background: var(--color-surface-secondary); border-radius: 4px;">
+                <h4>Diamond Crossing Details</h4>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="diamondApproachStraight">
+                  <label for="diamondApproachStraight">Diamond is on straight approach with minimum 50 m straight before curve</label>
+                </div>
+              </div>
+
+              <div id="enableTrafficMix-section" data-case-section="enableTrafficMix" hidden style="margin-top: var(--spacing-lg); padding: var(--spacing-lg); background: var(--color-surface-secondary); border-radius: 4px;">
+                <h4>Traffic Mix for Equilibrium Cant</h4>
+                <div class="input-group">
+                  <div class="form-group">
+                    <label for="trafficN1">Train Count Group 1</label>
+                    <input type="number" id="trafficN1" min="0" step="1" value="12">
+                  </div>
+                  <div class="form-group">
+                    <label for="trafficW1">Train Load Group 1 (t)</label>
+                    <input type="number" id="trafficW1" min="0" step="0.01" value="750">
+                  </div>
+                  <div class="form-group">
+                    <label for="trafficV1">Speed Group 1 (km/h)</label>
+                    <input type="number" id="trafficV1" min="0" step="0.01" value="50">
+                  </div>
+                  <div class="form-group">
+                    <label for="trafficN2">Train Count Group 2</label>
+                    <input type="number" id="trafficN2" min="0" step="1" value="7">
+                  </div>
+                  <div class="form-group">
+                    <label for="trafficW2">Train Load Group 2 (t)</label>
+                    <input type="number" id="trafficW2" min="0" step="0.01" value="1700">
+                  </div>
+                  <div class="form-group">
+                    <label for="trafficV2">Speed Group 2 (km/h)</label>
+                    <input type="number" id="trafficV2" min="0" step="0.01" value="15">
+                  </div>
+                  <div class="form-group">
+                    <label for="trafficN3">Train Count Group 3</label>
+                    <input type="number" id="trafficN3" min="0" step="1" value="25">
+                  </div>
+                  <div class="form-group">
+                    <label for="trafficW3">Train Load Group 3 (t)</label>
+                    <input type="number" id="trafficW3" min="0" step="0.01" value="300">
+                  </div>
+                  <div class="form-group">
+                    <label for="trafficV3">Speed Group 3 (km/h)</label>
+                    <input type="number" id="trafficV3" min="0" step="0.01" value="30">
+                  </div>
+                </div>
+              </div>
+
+              <h3 class="mt-4">Gradient and Vertical Curve</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="existingGradient">Existing Gradient (%)</label>
+                  <input type="number" id="existingGradient" step="0.001" value="0.5">
+                </div>
+                <div class="form-group">
+                  <label for="rulingGradient">Ruling Gradient (%)</label>
+                  <input type="number" id="rulingGradient" step="0.001" value="0.5">
+                </div>
+                <div class="form-group">
+                  <label for="grade1">Grade 1 (%)</label>
+                  <input type="number" id="grade1" step="0.001" value="0.2">
+                </div>
+                <div class="form-group">
+                  <label for="grade2">Grade 2 (%)</label>
+                  <input type="number" id="grade2" step="0.001" value="-0.3">
+                </div>
+                <div class="form-group">
+                  <label for="verticalGroup">Vertical Curve Class</label>
+                  <select id="verticalGroup">
+                    <option value="A">Group A</option>
+                    <option value="B">Group B</option>
+                    <option value="CDE">Group C / D / E</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-md); margin-top: var(--spacing-2xl);">
+                <button class="btn btn-primary" id="generateBtn">Generate Report</button>
+                <button class="btn btn-secondary" id="resetBtn">Reset Values</button>
+                <button class="btn btn-secondary" id="printBtn">Print</button>
+                <button class="btn btn-secondary" id="professionalReportBtn">Professional Report</button>
+                <button class="btn btn-secondary" id="pdfReportBtn">PDF Report</button>
+              </div>
+            </div>
+
+            <!-- Report Display -->
+            <div class="office-panel mt-4">
+              <h2>Full Report</h2>
+              <div id="report" class="report">
+                <div class="empty">Enter design data and click <strong>Generate Report</strong> to see results.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Compound Curve Page -->
+        <section class="app-page" id="compoundPage" hidden>
+          <div class="office-panel">
+            <div class="office-panel-header">
+              <h1>Compound Curve Design</h1>
+              <p class="office-panel-subtitle">Design transitions for compound curves</p>
+            </div>
+
+            <!-- Input Panel -->
+            <div class="office-panel">
+              <h2>Compound Curve Parameters</h2>
+              <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">A compound curve consists of two circular arcs with different radii. Enter the cant and cant deficiency values for each curve segment.</p>
+              
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="compoundCurveName">Curve / Location Name</label>
+                  <input type="text" id="compoundCurveName" value="Compound Curve A">
+                </div>
+              </div>
+
+              <h3>Curve 1 Parameters</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="compoundRadius1">Radius R₁ (m)</label>
+                  <input type="number" id="compoundRadius1" min="0" step="0.01" value="600">
+                </div>
+                <div class="form-group">
+                  <label for="compoundSpeed1">Speed V₁ (km/h)</label>
+                  <input type="number" id="compoundSpeed1" min="0" step="0.01" value="85">
+                </div>
+                <div class="form-group">
+                  <label for="compoundCa1">Cant Ca₁ (mm)</label>
+                  <input type="number" id="compoundCa1" min="0" step="0.01" value="95">
+                </div>
+                <div class="form-group">
+                  <label for="compoundCd1">Cant Deficiency Cd₁ (mm)</label>
+                  <input type="number" id="compoundCd1" min="0" step="0.01" value="75">
+                </div>
+              </div>
+
+              <h3>Curve 2 Parameters</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="compoundRadius2">Radius R₂ (m)</label>
+                  <input type="number" id="compoundRadius2" min="0" step="0.01" value="800">
+                </div>
+                <div class="form-group">
+                  <label for="compoundSpeed2">Speed V₂ (km/h)</label>
+                  <input type="number" id="compoundSpeed2" min="0" step="0.01" value="95">
+                </div>
+                <div class="form-group">
+                  <label for="compoundCa2">Cant Ca₂ (mm)</label>
+                  <input type="number" id="compoundCa2" min="0" step="0.01" value="60">
+                </div>
+                <div class="form-group">
+                  <label for="compoundCd2">Cant Deficiency Cd₂ (mm)</label>
+                  <input type="number" id="compoundCd2" min="0" step="0.01" value="45">
+                </div>
+              </div>
+
+              <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-md); margin-top: var(--spacing-2xl);">
+                <button class="btn btn-primary" id="compoundGenerateBtn">Calculate Compound Transition</button>
+                <button class="btn btn-secondary" id="compoundResetBtn">Reset Values</button>
+              </div>
+            </div>
+
+            <!-- Report Display -->
+            <div class="office-panel mt-4">
+              <h2>Compound Curve Report</h2>
+              <div id="compoundReport" class="report">
+                <div class="empty">Enter parameters and click <strong>Calculate Compound Transition</strong> to see results.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Reverse Curve Page -->
+        <section class="app-page" id="reversePage" hidden>
+          <div class="office-panel">
+            <div class="office-panel-header">
+              <h1>Reverse Curve Design</h1>
+              <p class="office-panel-subtitle">Design transitions for reverse curves (S-curves)</p>
+            </div>
+
+            <!-- Input Panel -->
+            <div class="office-panel">
+              <h2>Reverse Curve Parameters</h2>
+              <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">A reverse (S) curve consists of two curves in opposite directions. Enter the cant and cant deficiency values for each curve.</p>
+              
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="reverseCurveName">Curve / Location Name</label>
+                  <input type="text" id="reverseCurveName" value="Reverse Curve A">
+                </div>
+              </div>
+
+              <h3>First Curve (Left)</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="reverseRadius1">Radius R₁ (m)</label>
+                  <input type="number" id="reverseRadius1" min="0" step="0.01" value="800">
+                </div>
+                <div class="form-group">
+                  <label for="reverseSpeed1">Speed V₁ (km/h)</label>
+                  <input type="number" id="reverseSpeed1" min="0" step="0.01" value="85">
+                </div>
+                <div class="form-group">
+                  <label for="reverseCa1">Cant Ca₁ (mm)</label>
+                  <input type="number" id="reverseCa1" min="0" step="0.01" value="95">
+                </div>
+                <div class="form-group">
+                  <label for="reverseCd1">Cant Deficiency Cd₁ (mm)</label>
+                  <input type="number" id="reverseCd1" min="0" step="0.01" value="75">
+                </div>
+              </div>
+
+              <h3>Second Curve (Right)</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="reverseRadius2">Radius R₂ (m)</label>
+                  <input type="number" id="reverseRadius2" min="0" step="0.01" value="900">
+                </div>
+                <div class="form-group">
+                  <label for="reverseSpeed2">Speed V₂ (km/h)</label>
+                  <input type="number" id="reverseSpeed2" min="0" step="0.01" value="95">
+                </div>
+                <div class="form-group">
+                  <label for="reverseCa2">Cant Ca₂ (mm)</label>
+                  <input type="number" id="reverseCa2" min="0" step="0.01" value="80">
+                </div>
+                <div class="form-group">
+                  <label for="reverseCd2">Cant Deficiency Cd₂ (mm)</label>
+                  <input type="number" id="reverseCd2" min="0" step="0.01" value="65">
+                </div>
+              </div>
+
+              <h3>Straight Section</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="reverseStraight">Straight Length Between Curves (m)</label>
+                  <input type="number" id="reverseStraight" min="0" step="0.01" value="60">
+                </div>
+              </div>
+
+              <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-md); margin-top: var(--spacing-2xl);">
+                <button class="btn btn-primary" id="reverseGenerateBtn">Calculate Reverse Transition</button>
+                <button class="btn btn-secondary" id="reverseResetBtn">Reset Values</button>
+              </div>
+            </div>
+
+            <!-- Report Display -->
+            <div class="office-panel mt-4">
+              <h2>Reverse Curve Report</h2>
+              <div id="reverseReport" class="report">
+                <div class="empty">Enter parameters and click <strong>Calculate Reverse Transition</strong> to see results.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Check Curve Page -->
+        <section class="app-page" id="checkPage" hidden>
+          <div class="office-panel">
+            <div class="office-panel-header">
+              <h1>Check Existing Curve</h1>
+              <p class="office-panel-subtitle">Verify existing curves against specifications</p>
+            </div>
+
+            <!-- Input Panel -->
+            <div class="office-panel">
+              <h2>Existing Curve Data</h2>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="checkCurveName">Curve / Location Name</label>
+                  <input type="text" id="checkCurveName" value="Existing Curve A">
+                </div>
+                <div class="form-group">
+                  <label for="checkRouteGroup">Route Group</label>
+                  <select id="checkRouteGroup">
+                    <option value="AB">Group A / B</option>
+                    <option value="Other">Other route</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="checkCurveType">Curve Type</label>
+                  <select id="checkCurveType">
+                    <option value="transitioned">Fully transitioned</option>
+                    <option value="nonTransitioned">Non-transitioned</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="checkSectionalSpeed">Sectional Speed (km/h)</label>
+                  <input type="number" id="checkSectionalSpeed" min="0" value="110">
+                </div>
+              </div>
+
+              <h3 class="mt-4">Measured Geometry</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="checkRadius">Radius R (m)</label>
+                  <input type="number" id="checkRadius" min="0" step="0.01" value="600">
+                </div>
+                <div class="form-group">
+                  <label for="checkChordLength">Chord C (m)</label>
+                  <input type="number" id="checkChordLength" min="0" step="0.01" value="20">
+                </div>
+                <div class="form-group">
+                  <label for="checkVersine">Versine V (mm)</label>
+                  <input type="number" id="checkVersine" min="0" step="0.01" value="8.33">
+                </div>
+                <div class="form-group">
+                  <label for="checkTransitionLength">Transition L (m)</label>
+                  <input type="number" id="checkTransitionLength" min="0" step="0.01" value="70">
+                </div>
+                <div class="form-group">
+                  <label for="checkCurveLength">Curve Length (m)</label>
+                  <input type="number" id="checkCurveLength" min="0" step="0.01" value="320">
+                </div>
+                <div class="form-group">
+                  <label for="checkMeasuredCant">Cant (mm)</label>
+                  <input type="number" id="checkMeasuredCant" min="0" step="0.01" value="100">
+                </div>
+                <div class="form-group">
+                  <label for="checkSpeed">Check Speed (km/h)</label>
+                  <input type="number" id="checkSpeed" min="0" step="0.01" value="85">
+                </div>
+                <div class="form-group">
+                  <label for="checkGoodsSpeed">Goods Speed (km/h)</label>
+                  <input type="number" id="checkGoodsSpeed" min="0" step="0.01" value="45">
+                </div>
+              </div>
+
+              <h3 class="mt-4">Stock and Limits</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="checkGauge">Gauge G (mm)</label>
+                  <input type="number" id="checkGauge" min="0" step="0.01" value="1750">
+                </div>
+                <div class="form-group">
+                  <label for="checkStockType">Cant Deficiency Class</label>
+                  <select id="checkStockType">
+                    <option value="75">Other stock - 75 mm</option>
+                    <option value="100">Nominated stock - 100 mm</option>
+                    <option value="115">Nominated stock - 115 mm</option>
+                    <option value="150">Nominated stock - 150 mm</option>
+                  </select>
+                </div>
+              </div>
+
+              <h3 class="mt-4">Gradient and Vertical Curve</h3>
+              <div class="input-group">
+                <div class="form-group">
+                  <label for="checkExistingGradient">Gradient (%)</label>
+                  <input type="number" id="checkExistingGradient" step="0.001" value="0.5">
+                </div>
+                <div class="form-group">
+                  <label for="checkRulingGradient">Ruling Gradient (%)</label>
+                  <input type="number" id="checkRulingGradient" step="0.001" value="0.5">
+                </div>
+                <div class="form-group">
+                  <label for="checkGrade1">Grade 1 (%)</label>
+                  <input type="number" id="checkGrade1" step="0.001" value="0.2">
+                </div>
+                <div class="form-group">
+                  <label for="checkGrade2">Grade 2 (%)</label>
+                  <input type="number" id="checkGrade2" step="0.001" value="-0.3">
+                </div>
+                <div class="form-group">
+                  <label for="checkVerticalGroup">Vertical Curve Class</label>
+                  <select id="checkVerticalGroup">
+                    <option value="A">Group A</option>
+                    <option value="B">Group B</option>
+                    <option value="CDE">Group C / D / E</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="checkbox-group mt-4">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="checkTurnoutTrack">
+                  <label for="checkTurnoutTrack">Turnout on track (limit to 140 mm)</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="checkbox" id="checkOuterCrossingLimit">
+                  <label for="checkOuterCrossingLimit">Crossing limit (cap 150 mm at 115 mm)</label>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-md); margin-top: var(--spacing-2xl);">
+                <button class="btn btn-primary" id="checkGeneratePageBtn">Check Curve</button>
+                <button class="btn btn-secondary" id="checkResetPageBtn">Reset Values</button>
+                <button class="btn btn-secondary" id="checkPrintPageBtn">Print</button>
+                <button class="btn btn-secondary" id="checkProfessionalReportBtn">Professional Report</button>
+                <button class="btn btn-secondary" id="checkPdfReportBtn">PDF Report</button>
+              </div>
+            </div>
+
+            <!-- Report Display -->
+            <div class="office-panel mt-4">
+              <h2>Check Report</h2>
+              <div id="checkReport" class="report">
+                <div class="empty">Enter measured data and click <strong>Check Curve</strong> to see results.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Help Modals -->
+    <div id="guideModal" class="modal">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>User Guide</h2>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <h3>Getting Started</h3>
+          <p>Welcome to Curve Designer. This tool helps calculate railway curve specifications based on Indian Railway standards.</p>
+          
+          <h3>Design New Curve</h3>
+          <ol>
+            <li>Enter curve parameters (radius, chord length, speeds)</li>
+            <li>Configure track standard and route group</li>
+            <li>Click <strong>Generate Report</strong> to calculate</li>
+            <li>Review compliance notes and step-by-step calculations</li>
+            <li>Export or print the report as needed</li>
+          </ol>
+          
+          <h3>Check Existing Curve</h3>
+          <ol>
+            <li>Switch to "Check Existing Curve" tab</li>
+            <li>Enter measured field data (radius, cant, transition)</li>
+            <li>Click <strong>Check Curve</strong> to verify compliance</li>
+            <li>Review findings and recommendations</li>
+          </ol>
+          
+          <h3>Key Features</h3>
+          <ul>
+            <li><strong>Ribbon Interface:</strong> Quick access to common actions</li>
+            <li><strong>Step-by-Step Calculation:</strong> See detailed math for every result</li>
+            <li><strong>Compliance Checking:</strong> Automatic validation against standards</li>
+            <li><strong>Export/Import:</strong> Save and load your project data</li>
+            <li><strong>Light/Dark Theme:</strong> Toggle appearance preference</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="faqModal" class="modal">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Frequently Asked Questions</h2>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <h3>What is versine?</h3>
+          <p>Versine is the perpendicular distance from the chord to the curve arc. It's calculated as V = C² / (8R) × 1000 in millimeters.</p>
+          
+          <h3>What is cant?</h3>
+          <p>Cant is the banking of the track on curves, measured in millimeters. It reduces lateral forces on trains and improves ride quality.</p>
+          
+          <h3>What is cant deficiency?</h3>
+          <p>Cant deficiency is the additional theoretical cant needed to maintain perfect speed without wheel climb or slip. Governed by track standard limits.</p>
+          
+          <h3>How is transition length calculated?</h3>
+          <p>Transition length is the maximum of three criteria: cant rate (0.0056 or 0.008 × cant × speed), deficiency rate, and cant gradient (0.72 × cant).</p>
+          
+          <h3>What does "Non-transitioned with Virtual Transition" mean?</h3>
+          <p>Non-transitioned curves are followed by a straight section. A virtual transition is applied mathematically for design and checking purposes.</p>
+          
+          <h3>Can I export my data?</h3>
+          <p>Yes. Click the <strong>Export</strong> button (💾) in the header or ribbon to download your design data as JSON. Use <strong>Import</strong> to restore it later.</p>
+          
+          <h3>How do I print a report?</h3>
+          <p>Click the <strong>Print</strong> button in the ribbon or use Ctrl+P. The report will display with optimized formatting for printing.</p>
+          
+          <h3>What standards are supported?</h3>
+          <p>This tool supports Indian Railway standards including BG (Broad Gauge) with various cant and cant deficiency limits.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar (Optional Info Panel) -->
+    <aside class="office-sidebar-right">
+      <div class="sidebar-right-section">
+        <div class="sidebar-right-title">About</div>
+        <div class="sidebar-right-content">
+          <p>Curve Designer tool for railway curve calculations based on Curves & Turnouts standards.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- JavaScript Files -->
+  <script src="js/data.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/calculator.js"></script>
+  <script src="js/report-exporter.js"></script>
+  <script src="js/ui-manager.js"></script>
+  <script src="js/app.js"></script>
+
 </body>
 </html>
