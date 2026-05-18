@@ -15,6 +15,7 @@ const TOOLTIPS = {
   goodsSpeed: "Slow train or goods speed used for cant excess check.",
   gauge: "Dynamic gauge value in millimetres used in the cant formula.",
   stockType: "Permissible cant deficiency class for the rolling stock.",
+  adoptedCant: "Optional user-decided adopted cant. Enter 0 to keep the calculated recommendation.",
   turnoutTrack: "Enable when a turnout lies on the curve and the cant limit must be reduced.",
   outerCrossingLimit: "Use when 150 mm deficiency is restricted by crossing/expansion-device conditions."
 };
@@ -79,6 +80,36 @@ const MINIMUM_RADIUS_BY_STANDARD = {
   MG: 100
 };
 
+const DEFAULT_FORMULA_SETTINGS = {
+  adoptedCantRoundTo: 5,
+  transitionRoundTo: 10,
+  versineMultiplier: 1000,
+  versineDivisor: 8,
+  cantDivisor: 127,
+  speedCoefficient: 0.27,
+  transitionedRateFactor: 0.0056,
+  nonTransitionedRateFactor: 0.008,
+  cantGradientFactor: 0.72,
+  bgCantLimitAB: 185,
+  bgCantLimitOther: 165,
+  bgTurnoutCantLimit: 140,
+  mgCantLimit: 100,
+  mgTurnoutCantLimit: 90,
+  mgCdLimit: 50,
+  bgCantExcessLimit: 75,
+  mgCantExcessLimit: 50,
+  bgMinimumRadius: 175,
+  mgMinimumRadius: 100,
+  radiusFromVersineFactor: 125,
+  gradientCompensationFactor: 70,
+  relaxedTransitionNonRateMultiplier: 0.6666667,
+  relaxedTransitionRateMultiplier: 0.8333333,
+  relaxedTransitionGradientMultiplier: 0.5,
+  verticalRadiusA: 4000,
+  verticalRadiusB: 3000,
+  verticalRadiusCDE: 2500
+};
+
 const CASE_TOGGLE_IDS = [
   "enableCompound",
   "enableReverse",
@@ -91,7 +122,7 @@ const CASE_TOGGLE_IDS = [
 const FIELD_IDS = [
   "curveName", "problemType", "trackStandard", "routeGroup", "curveType", "sectionalSpeed",
   "radius", "curveLength", "chordLength", "offsetX", "designSpeed", "goodsSpeed",
-  "gauge", "stockType", "turnoutTrack", "outerCrossingLimit", "enableCompound",
+  "gauge", "stockType", "adoptedCant", "turnoutTrack", "outerCrossingLimit", "enableCompound",
   "enableReverse", "enableTurnout", "enableRestrictedTransition", "enableTrafficMix",
   "restrictedTransitionLength", "trafficN1", "trafficW1", "trafficV1", "trafficN2",
   "trafficW2", "trafficV2", "trafficN3", "trafficW3", "trafficV3", "compoundCa1",
@@ -111,6 +142,9 @@ const CHECK_FIELD_IDS = [
   "checkOuterCrossingLimit"
 ];
 
+const FORMULA_FIELD_IDS = Object.keys(DEFAULT_FORMULA_SETTINGS).map((key) => `formula-${key}`);
+
 // Default state objects
 let defaultState = {};
 let checkDefaultState = {};
+let formulaSettings = { ...DEFAULT_FORMULA_SETTINGS };

@@ -565,135 +565,78 @@ class ReportExporter {
     return label || "Standard report";
   }
 
-  openHtmlInPreviewTab(html, options = {}) {
-    const { fallbackTarget = "_self" } = options;
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const revokeUrl = () => {
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
+  openInPagePreview() {
+    const documentData = this.createProfessionalReportDocument();
+    const modal = el("reportPreviewModal");
+    const frame = el("reportPreviewFrame");
+    const title = el("reportPreviewTitle");
+
+    if (!modal || !frame) {
+      throw new Error("The in-page report preview is not available.");
+    }
+
+    this.currentPreviewDocument = documentData;
+    if (title) {
+      title.textContent = `${documentData.title} - PDF / Print Preview`;
+    }
+
+    frame.srcdoc = documentData.html;
+    modal.classList.add("active");
+    this.bindPreviewControls();
+  }
+
+  bindPreviewControls() {
+    const modal = el("reportPreviewModal");
+    if (!modal || modal.dataset.bound === "true") {
+      return;
+    }
+
+    const closePreview = () => {
+      modal.classList.remove("active");
     };
 
-    const previewWindow = window.open(url, "_blank");
-    if (previewWindow) {
-      revokeUrl();
-      return previewWindow;
+    modal.querySelector(".modal-overlay")?.addEventListener("click", closePreview);
+    modal.querySelector(".modal-close")?.addEventListener("click", closePreview);
+
+    el("reportPreviewRefreshBtn")?.addEventListener("click", () => {
+      this.openInPagePreview();
+    });
+
+    el("reportPreviewPrintBtn")?.addEventListener("click", () => {
+      this.printPreview();
+    });
+
+    el("reportPreviewPdfBtn")?.addEventListener("click", () => {
+      this.printPreview();
+    });
+
+    modal.dataset.bound = "true";
+  }
+
+  printPreview() {
+    const frame = el("reportPreviewFrame");
+    const printWindow = frame && frame.contentWindow;
+
+    if (!printWindow) {
+      throw new Error("Open the report preview before printing.");
     }
 
-    if (fallbackTarget === "_self") {
-      window.location.assign(url);
-      revokeUrl();
-      return window;
-    }
-
-    throw new Error("Your browser blocked the report preview window.");
+    printWindow.focus();
+    printWindow.print();
   }
 
   openPreview() {
-    const documentData = this.createProfessionalReportDocument();
-    this.openHtmlInPreviewTab(documentData.html);
+    this.openInPagePreview();
   }
 
   openPdfDownloadWindow() {
-    const documentData = this.createProfessionalReportDocument();
-    const pdfReadyHtml = documentData.html.replace(
-      "<body>",
-      `<body>
-  <div class="pdf-toolbar">
-    <button type="button" class="pdf-toolbar-button" onclick="window.print()">Save / Print PDF</button>
-    <span class="pdf-toolbar-note">Choose your browser's "Save as PDF" destination in the print dialog.</span>
-  </div>`
-    ).replace(
-      "</body>",
-      `  <script>
-    window.addEventListener("load", function () {
-      setTimeout(function () {
-        window.focus();
-        window.print();
-      }, 300);
-    });
-  </script>
-</body>`
-    ).replace(
-      "@media print {",
-      `.pdf-toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin: 0 auto 18px;
-      max-width: 1080px;
-      padding: 14px 18px;
-      border-radius: 14px;
-      background: #132033;
-      color: #ffffff;
-      box-shadow: 0 14px 34px rgba(12, 25, 43, 0.2);
-    }
-
-    .pdf-toolbar-button {
-      appearance: none;
-      border: none;
-      border-radius: 999px;
-      padding: 10px 18px;
-      background: #ffffff;
-      color: #124a9c;
-      font: inherit;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .pdf-toolbar-button:hover {
-      background: #eaf1fb;
-    }
-
-    .pdf-toolbar-note {
-      font-size: 13px;
-      opacity: 0.9;
-    }
-
-    @media (max-width: 720px) {
-      .pdf-toolbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-
-    @media print {`
-    ).replace(
-      "body {",
-      `body {
-        background: #ffffff;
-        padding: 0;
-      }
-
-      .pdf-toolbar {
-        display: none !important;
-      }
-
-      body {`
-    );
-    this.openHtmlInPreviewTab(pdfReadyHtml);
+    this.openInPagePreview();
+    setTimeout(() => this.printPreview(), 250);
   }
 
   print() {
-    const documentData = this.createProfessionalReportDocument();
-    const printWindow = window.open("", "_blank", "noopener,noreferrer");
-
-    if (!printWindow) {
-      throw new Error("Popup blocked while opening the print preview.");
-    }
-
-    printWindow.document.open();
-    printWindow.document.write(documentData.html);
-    printWindow.document.close();
-    printWindow.addEventListener("load", () => {
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-      }, 250);
-    });
+    this.openInPagePreview();
+    setTimeout(() => this.printPreview(), 250);
   }
 
   download() {

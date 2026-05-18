@@ -126,9 +126,93 @@
 
 .office-content {
   flex: 1;
-  overflow-y: auto;
-  padding: 18px 24px 36px;
+  display: flex;
+  gap: 18px;
+  overflow: hidden;
+  padding: 18px 24px 18px 18px;
   background: var(--color-surface-secondary);
+  height: 100%;
+}
+
+/* Input Panel - Left Side */
+.input-panel {
+  width: var(--input-panel-width, 320px);
+  min-width: 260px;
+  max-width: min(560px, 45vw);
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-right: 12px;
+  position: relative;
+  box-shadow: inset -1px 0 0 var(--color-border);
+  transition: box-shadow 0.15s ease;
+}
+
+.input-panel:hover,
+body.input-panel-resizing .input-panel {
+  box-shadow: inset -2px 0 0 var(--color-primary);
+}
+
+.input-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.input-panel-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  width: 8px;
+  cursor: col-resize;
+  background: linear-gradient(
+    to right,
+    transparent 0,
+    transparent 3px,
+    var(--color-border) 3px,
+    var(--color-border) 4px,
+    transparent 4px
+  );
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  touch-action: none;
+}
+
+.input-panel:hover .input-panel-resize-handle,
+.input-panel-resize-handle:focus-visible,
+body.input-panel-resizing .input-panel-resize-handle {
+  opacity: 1;
+}
+
+.input-panel-resize-handle:hover,
+.input-panel-resize-handle:focus-visible,
+body.input-panel-resizing .input-panel-resize-handle {
+  background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+body.input-panel-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* Results Panel - Center */
+.results-panel {
+  flex: 1;
+  min-width: 400px;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.results-panel::-webkit-scrollbar {
+  width: 8px;
 }
 
 .office-panel {
@@ -254,5 +338,25 @@
   .sidebar-nav-item > a.active,
   .sidebar-nav-item > button.active {
     box-shadow: inset 0 -2px 0 var(--color-primary);
+  }
+
+  .office-content {
+    overflow: visible;
+  }
+
+  .app-page {
+    flex-direction: column;
+  }
+
+  .input-panel {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    padding-right: 0;
+  }
+
+  .input-panel-resize-handle {
+    display: none;
   }
 }

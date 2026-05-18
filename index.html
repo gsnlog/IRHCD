@@ -13,6 +13,14 @@
   
   <style>
     /* Additional page-specific styles */
+    .app-page {
+      display: flex;
+      flex-direction: row;
+      gap: 18px;
+      width: 100%;
+      height: 100%;
+    }
+
     .app-page[hidden] {
       display: none;
     }
@@ -21,6 +29,15 @@
       display: flex;
       flex-direction: column;
       gap: var(--spacing-lg);
+    }
+
+    .master-formula-panel {
+      min-width: 0;
+      width: 100%;
+    }
+
+    .formula-settings-grid .form-group {
+      min-width: 0;
     }
 
     .report-card {
@@ -50,6 +67,126 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: var(--spacing-lg);
+    }
+
+    .input-panel .office-panel {
+      padding: var(--spacing-md);
+    }
+
+    .input-panel h2 {
+      margin-bottom: var(--spacing-sm);
+      font-size: var(--font-size-lg);
+    }
+
+    .input-panel h3 {
+      margin-top: var(--spacing-md);
+      margin-bottom: var(--spacing-sm);
+      font-size: var(--font-size-base);
+    }
+
+    .input-panel h3.mt-4,
+    .input-panel .mt-4 {
+      margin-top: var(--spacing-md) !important;
+    }
+
+    .input-panel h4 {
+      margin-bottom: var(--spacing-sm);
+      font-size: var(--font-size-base);
+    }
+
+    .input-panel .input-group {
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .input-panel .form-group {
+      display: grid;
+      grid-template-columns: minmax(105px, 1fr) auto;
+      align-items: center;
+      column-gap: var(--spacing-sm);
+      row-gap: 4px;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .input-panel .form-group label,
+    .input-panel .checkbox-item label {
+      font-size: var(--font-size-sm);
+      line-height: 1.25;
+    }
+
+    .input-panel input[type="text"],
+    .input-panel input[type="number"],
+    .input-panel select {
+      min-height: 30px;
+      padding: 4px 8px;
+      font-size: var(--font-size-sm);
+    }
+
+    .input-panel input[type="number"] {
+      width: 88px;
+      justify-self: end;
+    }
+
+    .input-panel input[type="text"],
+    .input-panel select {
+      width: 150px;
+      justify-self: end;
+    }
+
+    .input-panel .readonly-field {
+      width: 150px;
+      justify-self: end;
+    }
+
+    .input-panel .checkbox-group {
+      gap: var(--spacing-xs);
+    }
+
+    .input-panel .checkbox-item {
+      gap: var(--spacing-sm);
+      min-height: 24px;
+    }
+
+    .input-panel input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+    }
+
+    .input-panel [data-case-section] {
+      margin-top: var(--spacing-md) !important;
+      padding: var(--spacing-md) !important;
+    }
+
+    .input-panel .tooltip {
+      width: 15px !important;
+      height: 15px !important;
+      line-height: 15px !important;
+      font-size: 10px !important;
+    }
+
+    .input-panel .btn {
+      min-height: 30px;
+      padding: 5px 10px;
+      font-size: var(--font-size-sm);
+    }
+
+    .input-panel .office-panel > div[style*="margin-top: var(--spacing-2xl)"] {
+      margin-top: var(--spacing-md) !important;
+      gap: var(--spacing-sm) !important;
+    }
+
+    @media (max-width: 720px) {
+      .input-panel .form-group {
+        grid-template-columns: 1fr;
+      }
+
+      .input-panel input[type="number"],
+      .input-panel input[type="text"],
+      .input-panel select,
+      .input-panel .readonly-field {
+        width: 100%;
+        justify-self: stretch;
+      }
     }
 
     .empty {
@@ -148,6 +285,52 @@
       letter-spacing: 0.5px;
     }
 
+    .report-preview-modal .modal-content {
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      display: flex;
+      flex-direction: column;
+      border-radius: 0;
+      overflow: hidden;
+    }
+
+    .report-preview-modal .modal-header {
+      flex: 0 0 auto;
+      padding: var(--spacing-md) var(--spacing-xl);
+    }
+
+    .report-preview-modal .modal-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      flex-direction: column;
+      gap: var(--spacing-md);
+      padding: var(--spacing-md) var(--spacing-xl) var(--spacing-xl);
+      overflow: hidden;
+    }
+
+    .report-preview-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--spacing-sm);
+      flex: 0 0 auto;
+      padding-bottom: var(--spacing-sm);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .report-preview-frame {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      border: 1px solid var(--color-border);
+      border-radius: 0;
+      background: #ffffff;
+    }
+
   </style>
 </head>
 <body class="light-mode">
@@ -199,20 +382,27 @@
       <!-- Report Group -->
       <div class="ribbon-group">
         <div class="ribbon-buttons">
-          <button class="ribbon-button" id="printReportBtn" title="Print Report">
-            <div class="ribbon-button-icon">🖨️</div>
-            <div class="ribbon-button-label">Print</div>
-          </button>
-          <button class="ribbon-button" id="exportReportBtn" title="Create Professional Report">
-            <div class="ribbon-button-icon">📊</div>
-            <div class="ribbon-button-label">Professional</div>
-          </button>
-          <button class="ribbon-button" id="pdfRibbonBtn" title="Open PDF Report">
+          <button class="ribbon-button" id="reportPreviewRibbonBtn" title="Open PDF and Print Report">
             <div class="ribbon-button-icon">PDF</div>
-            <div class="ribbon-button-label">PDF</div>
+            <div class="ribbon-button-label">Report</div>
           </button>
         </div>
         <div class="ribbon-group-label">Report</div>
+      </div>
+
+      <!-- Data Group -->
+      <div class="ribbon-group">
+        <div class="ribbon-buttons">
+          <button class="ribbon-button" id="exportDataRibbonBtn" title="Export Data">
+            <div class="ribbon-button-icon">💾</div>
+            <div class="ribbon-button-label">Export Data</div>
+          </button>
+          <button class="ribbon-button" id="importDataRibbonBtn" title="Import Data">
+            <div class="ribbon-button-icon">📂</div>
+            <div class="ribbon-button-label">Import Data</div>
+          </button>
+        </div>
+        <div class="ribbon-group-label">Data</div>
       </div>
 
       <!-- Check Group -->
@@ -264,9 +454,9 @@
       <div class="sidebar-header">Project Setup</div>
       <nav class="sidebar-nav">
         <li class="sidebar-nav-item">
-          <button data-target="designPage">
-            <span class="sidebar-nav-icon">📐</span>
-            <span class="sidebar-nav-label">Design Curve</span>
+          <button id="openProjectSetupBtn">
+            <span class="sidebar-nav-icon">⚙️</span>
+            <span class="sidebar-nav-label">Project Setup</span>
           </button>
         </li>
       </nav>
@@ -276,21 +466,33 @@
       <div class="sidebar-header">Navigation</div>
       <nav class="sidebar-nav">
         <li class="sidebar-nav-item">
-          <button data-target="compoundPage">
+          <button data-target="designPage" class="nav-button">
+            <span class="sidebar-nav-icon">📐</span>
+            <span class="sidebar-nav-label">Design Curve</span>
+          </button>
+        </li>
+        <li class="sidebar-nav-item">
+          <button data-target="compoundPage" class="nav-button">
             <span class="sidebar-nav-icon">🔀</span>
             <span class="sidebar-nav-label">Compound Curve</span>
           </button>
         </li>
         <li class="sidebar-nav-item">
-          <button data-target="reversePage">
+          <button data-target="reversePage" class="nav-button">
             <span class="sidebar-nav-icon">↩️</span>
             <span class="sidebar-nav-label">Reverse Curve</span>
           </button>
         </li>
         <li class="sidebar-nav-item">
-          <button data-target="checkPage">
+          <button data-target="checkPage" class="nav-button">
             <span class="sidebar-nav-icon">✓</span>
             <span class="sidebar-nav-label">Check Curve</span>
+          </button>
+        </li>
+        <li class="sidebar-nav-item">
+          <button data-target="masterPage" class="nav-button">
+            <span class="sidebar-nav-icon">fx</span>
+            <span class="sidebar-nav-label">Master Formulas</span>
           </button>
         </li>
       </nav>
@@ -320,59 +522,12 @@
         
         <!-- Design Page -->
         <section class="app-page" id="designPage">
-          <div class="office-panel">
-            <div class="office-panel-header">
-              <h1>Curve Design and ROC Full Report</h1>
-              <p class="office-panel-subtitle">Design new curves based on Curves & Turnouts specifications</p>
-            </div>
-
-            <!-- Input Panel -->
+          <!-- Input Panel - Left Side -->
+          <div class="input-panel">
             <div class="office-panel">
               <h2>Input Data</h2>
 
-              <div class="input-group">
-                <div class="form-group">
-                  <label for="curveName">Curve / Location Name</label>
-                  <input type="text" id="curveName" value="Curve A">
-                </div>
-                <div class="form-group">
-                  <label for="problemType">Design Problem Type</label>
-                  <select id="problemType">
-                    <option value="standard">Standard cant and transition design</option>
-                    <option value="minimumRadius">Minimum radius for unrestricted speed</option>
-                    <option value="restrictedTransition">Restricted transition / speed optimization</option>
-                    <option value="trafficWeighted">Traffic-weighted equilibrium cant</option>
-                    <option value="turnoutCrossover">Turnout / crossover design review</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="trackStandard">Track Standard</label>
-                  <select id="trackStandard">
-                    <option value="BG">Broad Gauge (BG)</option>
-                    <option value="MG">Meter Gauge (MG)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="routeGroup">Route Group</label>
-                  <select id="routeGroup">
-                    <option value="AB">Group A / B</option>
-                    <option value="Other">Other route</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="curveType">Curve Type</label>
-                  <select id="curveType">
-                    <option value="transitioned">Fully transitioned</option>
-                    <option value="nonTransitioned">Non-transitioned with virtual transition</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="sectionalSpeed">Sectional Speed (km/h)</label>
-                  <input type="number" id="sectionalSpeed" min="0" value="110">
-                </div>
-              </div>
-
-              <h3 class="mt-4">Geometry</h3>
+              <h3>Geometry</h3>
               <div class="input-group">
                 <div class="form-group">
                   <label for="radius">Radius R (m)</label>
@@ -407,13 +562,18 @@
                   <input type="number" id="gauge" min="0" step="0.01" value="1750">
                 </div>
                 <div class="form-group">
-                  <label for="stockType">Cant Deficiency Class</label>
+                  <label for="stockType">Cant Deficiency</label>
                   <select id="stockType">
                     <option value="75">Other stock - 75 mm</option>
                     <option value="100">Nominated stock - 100 mm</option>
                     <option value="115">Nominated stock - 115 mm</option>
                     <option value="150">Nominated stock - 150 mm</option>
                   </select>
+                </div>
+                <div class="form-group">
+                  <label for="adoptedCant">Adopted Cant by User (mm)</label>
+                  <input type="number" id="adoptedCant" min="0" step="0.01" value="0" placeholder="0 = use calculated cant">
+                  <div class="form-group-hint">Leave as 0 to use the calculated recommendation; enter a value to rerun the report with that cant.</div>
                 </div>
               </div>
 
@@ -589,25 +749,30 @@
                 </div>
                 <div class="form-group">
                   <label for="verticalGroup">Vertical Curve Class</label>
-                  <select id="verticalGroup">
-                    <option value="A">Group A</option>
-                    <option value="B">Group B</option>
-                    <option value="CDE">Group C / D / E</option>
-                  </select>
+                  <input type="hidden" id="verticalGroup" value="A">
+                  <span class="readonly-field" id="verticalGroupDisplay">Group A</span>
                 </div>
               </div>
 
               <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-md); margin-top: var(--spacing-2xl);">
                 <button class="btn btn-primary" id="generateBtn">Generate Report</button>
                 <button class="btn btn-secondary" id="resetBtn">Reset Values</button>
-                <button class="btn btn-secondary" id="printBtn">Print</button>
-                <button class="btn btn-secondary" id="professionalReportBtn">Professional Report</button>
-                <button class="btn btn-secondary" id="pdfReportBtn">PDF Report</button>
+                <button class="btn btn-secondary" id="reportPreviewBtn">PDF / Print Report</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results Panel - Center -->
+          <div class="results-panel">
+            <div class="office-panel">
+              <div class="office-panel-header">
+                <h1>Curve Design and ROC Full Report</h1>
+                <p class="office-panel-subtitle">Design new curves based on Curves & Turnouts specifications</p>
               </div>
             </div>
 
             <!-- Report Display -->
-            <div class="office-panel mt-4">
+            <div class="office-panel">
               <h2>Full Report</h2>
               <div id="report" class="report">
                 <div class="empty">Enter design data and click <strong>Generate Report</strong> to see results.</div>
@@ -618,13 +783,8 @@
 
         <!-- Compound Curve Page -->
         <section class="app-page" id="compoundPage" hidden>
-          <div class="office-panel">
-            <div class="office-panel-header">
-              <h1>Compound Curve Design</h1>
-              <p class="office-panel-subtitle">Design transitions for compound curves</p>
-            </div>
-
-            <!-- Input Panel -->
+          <!-- Input Panel - Left Side -->
+          <div class="input-panel">
             <div class="office-panel">
               <h2>Compound Curve Parameters</h2>
               <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">A compound curve consists of two circular arcs with different radii. Enter the cant and cant deficiency values for each curve segment.</p>
@@ -681,9 +841,19 @@
                 <button class="btn btn-secondary" id="compoundResetBtn">Reset Values</button>
               </div>
             </div>
+          </div>
+
+          <!-- Results Panel - Center -->
+          <div class="results-panel">
+            <div class="office-panel">
+              <div class="office-panel-header">
+                <h1>Compound Curve Design</h1>
+                <p class="office-panel-subtitle">Design transitions for compound curves</p>
+              </div>
+            </div>
 
             <!-- Report Display -->
-            <div class="office-panel mt-4">
+            <div class="office-panel">
               <h2>Compound Curve Report</h2>
               <div id="compoundReport" class="report">
                 <div class="empty">Enter parameters and click <strong>Calculate Compound Transition</strong> to see results.</div>
@@ -694,13 +864,8 @@
 
         <!-- Reverse Curve Page -->
         <section class="app-page" id="reversePage" hidden>
-          <div class="office-panel">
-            <div class="office-panel-header">
-              <h1>Reverse Curve Design</h1>
-              <p class="office-panel-subtitle">Design transitions for reverse curves (S-curves)</p>
-            </div>
-
-            <!-- Input Panel -->
+          <!-- Input Panel - Left Side -->
+          <div class="input-panel">
             <div class="office-panel">
               <h2>Reverse Curve Parameters</h2>
               <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">A reverse (S) curve consists of two curves in opposite directions. Enter the cant and cant deficiency values for each curve.</p>
@@ -765,9 +930,19 @@
                 <button class="btn btn-secondary" id="reverseResetBtn">Reset Values</button>
               </div>
             </div>
+          </div>
+
+          <!-- Results Panel - Center -->
+          <div class="results-panel">
+            <div class="office-panel">
+              <div class="office-panel-header">
+                <h1>Reverse Curve Design</h1>
+                <p class="office-panel-subtitle">Design transitions for reverse curves (S-curves)</p>
+              </div>
+            </div>
 
             <!-- Report Display -->
-            <div class="office-panel mt-4">
+            <div class="office-panel">
               <h2>Reverse Curve Report</h2>
               <div id="reverseReport" class="report">
                 <div class="empty">Enter parameters and click <strong>Calculate Reverse Transition</strong> to see results.</div>
@@ -778,13 +953,8 @@
 
         <!-- Check Curve Page -->
         <section class="app-page" id="checkPage" hidden>
-          <div class="office-panel">
-            <div class="office-panel-header">
-              <h1>Check Existing Curve</h1>
-              <p class="office-panel-subtitle">Verify existing curves against specifications</p>
-            </div>
-
-            <!-- Input Panel -->
+          <!-- Input Panel - Left Side -->
+          <div class="input-panel">
             <div class="office-panel">
               <h2>Existing Curve Data</h2>
               <div class="input-group">
@@ -855,7 +1025,7 @@
                   <input type="number" id="checkGauge" min="0" step="0.01" value="1750">
                 </div>
                 <div class="form-group">
-                  <label for="checkStockType">Cant Deficiency Class</label>
+                  <label for="checkStockType">Cant Deficiency</label>
                   <select id="checkStockType">
                     <option value="75">Other stock - 75 mm</option>
                     <option value="100">Nominated stock - 100 mm</option>
@@ -885,11 +1055,8 @@
                 </div>
                 <div class="form-group">
                   <label for="checkVerticalGroup">Vertical Curve Class</label>
-                  <select id="checkVerticalGroup">
-                    <option value="A">Group A</option>
-                    <option value="B">Group B</option>
-                    <option value="CDE">Group C / D / E</option>
-                  </select>
+                  <input type="hidden" id="checkVerticalGroup" value="A">
+                  <span class="readonly-field" id="checkVerticalGroupDisplay">Group A</span>
                 </div>
               </div>
 
@@ -907,14 +1074,22 @@
               <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-md); margin-top: var(--spacing-2xl);">
                 <button class="btn btn-primary" id="checkGeneratePageBtn">Check Curve</button>
                 <button class="btn btn-secondary" id="checkResetPageBtn">Reset Values</button>
-                <button class="btn btn-secondary" id="checkPrintPageBtn">Print</button>
-                <button class="btn btn-secondary" id="checkProfessionalReportBtn">Professional Report</button>
-                <button class="btn btn-secondary" id="checkPdfReportBtn">PDF Report</button>
+                <button class="btn btn-secondary" id="checkReportPreviewBtn">PDF / Print Report</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results Panel - Center -->
+          <div class="results-panel">
+            <div class="office-panel">
+              <div class="office-panel-header">
+                <h1>Check Existing Curve</h1>
+                <p class="office-panel-subtitle">Verify existing curves against specifications</p>
               </div>
             </div>
 
             <!-- Report Display -->
-            <div class="office-panel mt-4">
+            <div class="office-panel">
               <h2>Check Report</h2>
               <div id="checkReport" class="report">
                 <div class="empty">Enter measured data and click <strong>Check Curve</strong> to see results.</div>
@@ -923,8 +1098,147 @@
           </div>
         </section>
 
+        <!-- Master Formula Page -->
+        <section class="app-page" id="masterPage" hidden>
+          <div class="results-panel master-formula-panel">
+            <div class="office-panel">
+              <div class="office-panel-header">
+                <h1>Master Formula Controls</h1>
+                <p class="office-panel-subtitle">Adjust formula coefficients, route limits, and rounding rules used by the design and check reports</p>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-md);">
+                <button class="btn btn-secondary" id="resetFormulaSettingsBtn">Reset Formula Defaults</button>
+              </div>
+            </div>
+
+            <div class="office-panel">
+              <h2>Core Formulas</h2>
+              <div class="grid grid-4 formula-settings-grid">
+                <div class="form-group"><label for="formula-versineMultiplier">Versine multiplier</label><input type="number" id="formula-versineMultiplier" step="0.01"></div>
+                <div class="form-group"><label for="formula-versineDivisor">Versine divisor</label><input type="number" id="formula-versineDivisor" step="0.01"></div>
+                <div class="form-group"><label for="formula-cantDivisor">Cant divisor</label><input type="number" id="formula-cantDivisor" step="0.01"></div>
+                <div class="form-group"><label for="formula-speedCoefficient">Speed coefficient</label><input type="number" id="formula-speedCoefficient" step="0.0001"></div>
+                <div class="form-group"><label for="formula-radiusFromVersineFactor">Radius-from-versine factor</label><input type="number" id="formula-radiusFromVersineFactor" step="0.01"></div>
+                <div class="form-group"><label for="formula-gradientCompensationFactor">Gradient compensation factor</label><input type="number" id="formula-gradientCompensationFactor" step="0.01"></div>
+              </div>
+            </div>
+
+            <div class="office-panel">
+              <h2>Cant and Transition</h2>
+              <div class="grid grid-4 formula-settings-grid">
+                <div class="form-group"><label for="formula-adoptedCantRoundTo">Adopted cant rounding (mm)</label><input type="number" id="formula-adoptedCantRoundTo" step="0.01"></div>
+                <div class="form-group"><label for="formula-transitionRoundTo">Transition rounding (m)</label><input type="number" id="formula-transitionRoundTo" step="0.01"></div>
+                <div class="form-group"><label for="formula-transitionedRateFactor">Transitioned rate factor</label><input type="number" id="formula-transitionedRateFactor" step="0.0001"></div>
+                <div class="form-group"><label for="formula-nonTransitionedRateFactor">Non-transitioned rate factor</label><input type="number" id="formula-nonTransitionedRateFactor" step="0.0001"></div>
+                <div class="form-group"><label for="formula-cantGradientFactor">Cant gradient factor</label><input type="number" id="formula-cantGradientFactor" step="0.01"></div>
+                <div class="form-group"><label for="formula-relaxedTransitionNonRateMultiplier">Relaxed non-transition rate multiplier</label><input type="number" id="formula-relaxedTransitionNonRateMultiplier" step="0.0001"></div>
+                <div class="form-group"><label for="formula-relaxedTransitionRateMultiplier">Relaxed transition rate multiplier</label><input type="number" id="formula-relaxedTransitionRateMultiplier" step="0.0001"></div>
+                <div class="form-group"><label for="formula-relaxedTransitionGradientMultiplier">Relaxed gradient multiplier</label><input type="number" id="formula-relaxedTransitionGradientMultiplier" step="0.0001"></div>
+              </div>
+            </div>
+
+            <div class="office-panel">
+              <h2>Limits</h2>
+              <div class="grid grid-4 formula-settings-grid">
+                <div class="form-group"><label for="formula-bgCantLimitAB">BG cant limit A/B (mm)</label><input type="number" id="formula-bgCantLimitAB" step="0.01"></div>
+                <div class="form-group"><label for="formula-bgCantLimitOther">BG cant limit other (mm)</label><input type="number" id="formula-bgCantLimitOther" step="0.01"></div>
+                <div class="form-group"><label for="formula-bgTurnoutCantLimit">BG turnout cant limit (mm)</label><input type="number" id="formula-bgTurnoutCantLimit" step="0.01"></div>
+                <div class="form-group"><label for="formula-mgCantLimit">MG cant limit (mm)</label><input type="number" id="formula-mgCantLimit" step="0.01"></div>
+                <div class="form-group"><label for="formula-mgTurnoutCantLimit">MG turnout cant limit (mm)</label><input type="number" id="formula-mgTurnoutCantLimit" step="0.01"></div>
+                <div class="form-group"><label for="formula-mgCdLimit">MG cant deficiency limit (mm)</label><input type="number" id="formula-mgCdLimit" step="0.01"></div>
+                <div class="form-group"><label for="formula-bgCantExcessLimit">BG cant excess limit (mm)</label><input type="number" id="formula-bgCantExcessLimit" step="0.01"></div>
+                <div class="form-group"><label for="formula-mgCantExcessLimit">MG cant excess limit (mm)</label><input type="number" id="formula-mgCantExcessLimit" step="0.01"></div>
+                <div class="form-group"><label for="formula-bgMinimumRadius">BG minimum radius (m)</label><input type="number" id="formula-bgMinimumRadius" step="0.01"></div>
+                <div class="form-group"><label for="formula-mgMinimumRadius">MG minimum radius (m)</label><input type="number" id="formula-mgMinimumRadius" step="0.01"></div>
+              </div>
+            </div>
+
+            <div class="office-panel">
+              <h2>Vertical Curve Radii</h2>
+              <div class="grid grid-4 formula-settings-grid">
+                <div class="form-group"><label for="formula-verticalRadiusA">Group A radius (m)</label><input type="number" id="formula-verticalRadiusA" step="0.01"></div>
+                <div class="form-group"><label for="formula-verticalRadiusB">Group B radius (m)</label><input type="number" id="formula-verticalRadiusB" step="0.01"></div>
+                <div class="form-group"><label for="formula-verticalRadiusCDE">Group C/D/E radius (m)</label><input type="number" id="formula-verticalRadiusCDE" step="0.01"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
     </main>
+
+    <!-- Project Setup Modal -->
+    <div id="projectSetupModal" class="modal">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Project Setup</h2>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="setupCurveName">Curve / Location Name</label>
+            <input type="text" id="setupCurveName" value="Curve A" placeholder="Enter curve name or location">
+          </div>
+          <div class="form-group">
+            <label for="setupTrackStandard">Track Standard</label>
+            <select id="setupTrackStandard">
+              <option value="BG">Broad Gauge (BG)</option>
+              <option value="MG">Meter Gauge (MG)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="setupRouteGroup">Route Group</label>
+            <select id="setupRouteGroup">
+              <option value="AB">Group A / B</option>
+              <option value="Other">Other route</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="setupVerticalGroup">Vertical Curve Class</label>
+            <select id="setupVerticalGroup">
+              <option value="A">Group A</option>
+              <option value="B">Group B</option>
+              <option value="CDE">Group C / D / E</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="setupCurveType">Curve Type</label>
+            <select id="setupCurveType">
+              <option value="transitioned">Fully transitioned</option>
+              <option value="nonTransitioned">Non-transitioned with virtual transition</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="setupSectionalSpeed">Sectional Speed (km/h)</label>
+            <input type="number" id="setupSectionalSpeed" min="0" value="110" placeholder="Enter speed in km/h">
+          </div>
+          <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-2xl); justify-content: flex-end;">
+            <button class="btn btn-secondary" id="cancelProjectSetupBtn">Cancel</button>
+            <button class="btn btn-primary" id="saveProjectSetupBtn">Setup Project</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report Preview Modal -->
+    <div id="reportPreviewModal" class="modal report-preview-modal">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="reportPreviewTitle">Report Preview</h2>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="report-preview-toolbar">
+            <button class="btn btn-secondary" id="reportPreviewRefreshBtn">Refresh</button>
+            <button class="btn btn-secondary" id="reportPreviewPrintBtn">Print</button>
+            <button class="btn btn-primary" id="reportPreviewPdfBtn">Save as PDF</button>
+          </div>
+          <iframe id="reportPreviewFrame" class="report-preview-frame" title="Report Preview"></iframe>
+        </div>
+      </div>
+    </div>
 
     <!-- Help Modals -->
     <div id="guideModal" class="modal">
@@ -994,7 +1308,7 @@
           <p>Yes. Click the <strong>Export</strong> button (💾) in the header or ribbon to download your design data as JSON. Use <strong>Import</strong> to restore it later.</p>
           
           <h3>How do I print a report?</h3>
-          <p>Click the <strong>Print</strong> button in the ribbon or use Ctrl+P. The report will display with optimized formatting for printing.</p>
+          <p>Click <strong>Report</strong> in the ribbon to preview the formatted report, then choose Print or Save as PDF.</p>
           
           <h3>What standards are supported?</h3>
           <p>This tool supports Indian Railway standards including BG (Broad Gauge) with various cant and cant deficiency limits.</p>

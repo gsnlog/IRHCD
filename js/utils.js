@@ -11,7 +11,8 @@ function el(id) {
  * Parse numeric value from input
  */
 function num(id) {
-  const value = parseFloat(el(id).value);
+  const node = el(id);
+  const value = node ? parseFloat(node.value) : NaN;
   return Number.isFinite(value) ? value : 0;
 }
 
@@ -19,14 +20,16 @@ function num(id) {
  * Get text value from input
  */
 function txt(id) {
-  return el(id).value;
+  const node = el(id);
+  return node ? node.value : "";
 }
 
 /**
  * Get checked state of checkbox
  */
 function checked(id) {
-  return el(id).checked;
+  const node = el(id);
+  return node ? node.checked : false;
 }
 
 /**
@@ -40,14 +43,28 @@ function round(value, digits = 2) {
  * Round to nearest 5
  */
 function roundTo5(value) {
-  return Math.round(value / 5) * 5;
+  return roundToNearest(value, getFormulaValue("adoptedCantRoundTo"));
 }
 
 /**
  * Round up to nearest 10
  */
 function ceilTo10(value) {
-  return Math.ceil(value / 10) * 10;
+  return ceilToNearest(value, getFormulaValue("transitionRoundTo"));
+}
+
+function roundToNearest(value, interval) {
+  const step = Number(interval);
+  if (!Number.isFinite(value)) return 0;
+  if (!Number.isFinite(step) || step <= 0) return value;
+  return Math.round(value / step) * step;
+}
+
+function ceilToNearest(value, interval) {
+  const step = Number(interval);
+  if (!Number.isFinite(value)) return 0;
+  if (!Number.isFinite(step) || step <= 0) return value;
+  return Math.ceil(value / step) * step;
 }
 
 /**
@@ -98,9 +115,9 @@ function statusFromChecks(checks) {
  */
 function getCantLimit(routeGroup, turnoutTrack) {
   if (turnoutTrack) {
-    return 140;
+    return getFormulaValue("bgTurnoutCantLimit");
   }
-  return routeGroup === "AB" ? 185 : 165;
+  return routeGroup === "AB" ? getFormulaValue("bgCantLimitAB") : getFormulaValue("bgCantLimitOther");
 }
 
 /**
@@ -108,7 +125,7 @@ function getCantLimit(routeGroup, turnoutTrack) {
  */
 function getDesignCantLimit(trackStandard, routeGroup, turnoutTrack) {
   if (trackStandard === "MG") {
-    return turnoutTrack ? 90 : 100;
+    return turnoutTrack ? getFormulaValue("mgTurnoutCantLimit") : getFormulaValue("mgCantLimit");
   }
   return getCantLimit(routeGroup, turnoutTrack);
 }
@@ -118,7 +135,7 @@ function getDesignCantLimit(trackStandard, routeGroup, turnoutTrack) {
  */
 function getDesignCdLimit(trackStandard, stockType, outerCrossingLimit) {
   if (trackStandard === "MG") {
-    return 50;
+    return getFormulaValue("mgCdLimit");
   }
   return getCdLimit(stockType, outerCrossingLimit);
 }
@@ -127,7 +144,7 @@ function getDesignCdLimit(trackStandard, stockType, outerCrossingLimit) {
  * Get cant excess limit
  */
 function getCantExcessLimit(trackStandard) {
-  return trackStandard === "MG" ? 50 : 75;
+  return trackStandard === "MG" ? getFormulaValue("mgCantExcessLimit") : getFormulaValue("bgCantExcessLimit");
 }
 
 /**
@@ -154,11 +171,13 @@ function getCdLimit(stockType, outerCrossingLimit) {
  * Solve best speed given constraints
  */
 function solveBestSpeed(radius, transitionLength, cantLimit, cdLimit, sectionalSpeed, isNonTransitioned) {
-  const factor = isNonTransitioned ? 0.008 : 0.0056;
+  const factor = getTransitionRateFactor(isNonTransitioned);
+  const cantGradientFactor = getFormulaValue("cantGradientFactor");
+  const speedCoefficient = getFormulaValue("speedCoefficient");
   let best = null;
 
   for (let speed = Math.floor(sectionalSpeed); speed >= 1; speed -= 1) {
-    const maxCaByGradient = transitionLength > 0 ? transitionLength / 0.72 : 0;
+    const maxCaByGradient = transitionLength > 0 ? transitionLength / cantGradientFactor : 0;
     const maxCaByRate = transitionLength > 0 ? transitionLength / (factor * speed) : 0;
     const feasibleCaMax = Math.floor(Math.min(cantLimit, maxCaByGradient, maxCaByRate));
     
@@ -169,7 +188,7 @@ function solveBestSpeed(radius, transitionLength, cantLimit, cdLimit, sectionalS
     for (let ca = feasibleCaMax; ca >= 0; ca -= 1) {
       const maxCdByRate = transitionLength > 0 ? transitionLength / (factor * speed) : 0;
       const cdMax = Math.floor(Math.min(cdLimit, maxCdByRate));
-      const neededSum = Math.pow(speed / 0.27, 2) / radius;
+      const neededSum = Math.pow(speed / speedCoefficient, 2) / radius;
       const minCdNeeded = Math.ceil(neededSum - ca);
 
       if (minCdNeeded <= cdMax) {
@@ -180,7 +199,7 @@ function solveBestSpeed(radius, transitionLength, cantLimit, cdLimit, sectionalS
           cantDeficiency: cd,
           rateLengthForCant: factor * ca * speed,
           rateLengthForCd: factor * cd * speed,
-          gradientLength: 0.72 * ca
+          gradientLength: cantGradientFactor * ca
         };
         return best;
       }
@@ -216,6 +235,58 @@ function setTheme(theme) {
   localStorage.setItem("theme", nextTheme);
 
   return nextTheme;
+}
+
+function loadFormulaSettings() {
+  const saved = localStorage.getItem("formulaSettings");
+  formulaSettings = { ...DEFAULT_FORMULA_SETTINGS };
+
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      Object.keys(DEFAULT_FORMULA_SETTINGS).forEach((key) => {
+        const value = Number(parsed[key]);
+        if (Number.isFinite(value)) {
+          formulaSettings[key] = value;
+        }
+      });
+    } catch (error) {
+      formulaSettings = { ...DEFAULT_FORMULA_SETTINGS };
+    }
+  }
+
+  return formulaSettings;
+}
+
+function saveFormulaSettings() {
+  localStorage.setItem("formulaSettings", JSON.stringify(formulaSettings));
+}
+
+function getFormulaValue(key) {
+  const value = Number(formulaSettings[key]);
+  const fallback = Number(DEFAULT_FORMULA_SETTINGS[key]);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function setFormulaValue(key, value) {
+  const numeric = Number(value);
+  if (Object.prototype.hasOwnProperty.call(DEFAULT_FORMULA_SETTINGS, key) && Number.isFinite(numeric)) {
+    formulaSettings[key] = numeric;
+  }
+}
+
+function getTransitionRateFactor(isNonTransitioned) {
+  return isNonTransitioned ? getFormulaValue("nonTransitionedRateFactor") : getFormulaValue("transitionedRateFactor");
+}
+
+function getMinimumRadius(trackStandard) {
+  return trackStandard === "MG" ? getFormulaValue("mgMinimumRadius") : getFormulaValue("bgMinimumRadius");
+}
+
+function getMinimumVerticalRadius(verticalGroup) {
+  if (verticalGroup === "A") return getFormulaValue("verticalRadiusA");
+  if (verticalGroup === "B") return getFormulaValue("verticalRadiusB");
+  return getFormulaValue("verticalRadiusCDE");
 }
 
 /**

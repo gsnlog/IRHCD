@@ -16,6 +16,7 @@ class UIManager {
     this.initializeTheme();
     this.initializeRibbon();
     this.initializeSidebar();
+    this.initializeInputPanelResize();
     this.attachEventListeners();
   }
 
@@ -200,6 +201,126 @@ class UIManager {
   }
 
   /**
+   * Initialize draggable resizing for input panels across pages.
+   */
+  initializeInputPanelResize() {
+    const panels = document.querySelectorAll(".input-panel");
+    if (!panels.length) return;
+
+    const minWidth = 260;
+    const defaultWidth = 320;
+    const storageKey = "inputPanelWidth";
+    const savedWidth = Number.parseInt(localStorage.getItem(storageKey), 10);
+    const initialWidth = Number.isFinite(savedWidth) ? savedWidth : defaultWidth;
+
+    const getActivePageWidth = () => {
+      const activePage = document.querySelector(".app-page:not([hidden])") || document.querySelector(".app-page");
+      return activePage ? activePage.getBoundingClientRect().width : window.innerWidth;
+    };
+
+    const getMaxWidth = () => {
+      const pageWidth = getActivePageWidth();
+      const availableWidth = pageWidth - 430;
+      return Math.max(minWidth, Math.min(560, availableWidth));
+    };
+
+    const setPanelWidth = (width, options = {}) => {
+      const { persist = true } = options;
+      const nextWidth = Math.round(Math.min(Math.max(width, minWidth), getMaxWidth()));
+      document.documentElement.style.setProperty("--input-panel-width", `${nextWidth}px`);
+
+      if (persist) {
+        localStorage.setItem(storageKey, String(nextWidth));
+      }
+    };
+
+    setPanelWidth(initialWidth, { persist: false });
+
+    const beginResize = (panel, event, captureTarget = panel) => {
+      if (window.matchMedia("(max-width: 720px)").matches) return;
+
+      event.preventDefault();
+      const startX = event.clientX;
+      const startWidth = panel.getBoundingClientRect().width;
+      document.body.classList.add("input-panel-resizing");
+      captureTarget.setPointerCapture(event.pointerId);
+
+      const onPointerMove = (moveEvent) => {
+        setPanelWidth(startWidth + moveEvent.clientX - startX);
+      };
+
+      const stopResize = () => {
+        document.body.classList.remove("input-panel-resizing");
+        captureTarget.removeEventListener("pointermove", onPointerMove);
+        captureTarget.removeEventListener("pointerup", stopResize);
+        captureTarget.removeEventListener("pointercancel", stopResize);
+        captureTarget.removeEventListener("lostpointercapture", stopResize);
+      };
+
+      captureTarget.addEventListener("pointermove", onPointerMove);
+      captureTarget.addEventListener("pointerup", stopResize);
+      captureTarget.addEventListener("pointercancel", stopResize);
+      captureTarget.addEventListener("lostpointercapture", stopResize);
+    };
+
+    panels.forEach((panel) => {
+      if (panel.querySelector(".input-panel-resize-handle")) return;
+
+      const handle = document.createElement("div");
+      handle.className = "input-panel-resize-handle";
+      handle.setAttribute("role", "separator");
+      handle.setAttribute("aria-orientation", "vertical");
+      handle.setAttribute("aria-label", "Resize input panel");
+      handle.setAttribute("tabindex", "0");
+      panel.appendChild(handle);
+
+      handle.addEventListener("pointerdown", (event) => {
+        beginResize(panel, event, handle);
+      });
+
+      panel.addEventListener("pointerdown", (event) => {
+        if (event.target === handle) return;
+
+        const rect = panel.getBoundingClientRect();
+        if (event.clientX >= rect.right - 8 && event.clientX <= rect.right) {
+          beginResize(panel, event);
+        }
+      });
+
+      handle.addEventListener("dblclick", () => {
+        setPanelWidth(defaultWidth);
+      });
+
+      handle.addEventListener("keydown", (event) => {
+        const currentWidth = panel.getBoundingClientRect().width;
+        const step = event.shiftKey ? 40 : 16;
+
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          setPanelWidth(currentWidth - step);
+        } else if (event.key === "ArrowRight") {
+          event.preventDefault();
+          setPanelWidth(currentWidth + step);
+        } else if (event.key === "Home") {
+          event.preventDefault();
+          setPanelWidth(minWidth);
+        } else if (event.key === "End") {
+          event.preventDefault();
+          setPanelWidth(getMaxWidth());
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          setPanelWidth(defaultWidth);
+        }
+      });
+    });
+
+    window.addEventListener("resize", () => {
+      const currentWidth = panels[0].getBoundingClientRect().width || initialWidth;
+      setPanelWidth(currentWidth);
+    });
+  }
+
+  /**
    * Switch page/section
    */
   switchPage(pageId) {
@@ -213,6 +334,12 @@ class UIManager {
     this.updateSidebarActive(pageId);
 
     this.currentPage = pageId;
+
+    if (pageId === "checkPage") {
+      buildCheckReport();
+    } else {
+      buildReport();
+    }
   }
 
   /**
@@ -258,12 +385,12 @@ class UIManager {
       resetDefaults();
     });
 
-    // Print Buttons
-    bindClick("printBtn", () => {
-      this.printProfessionalReport();
+    // Report Preview Buttons
+    bindClick("reportPreviewBtn", () => {
+      this.openReportPreview();
     });
-    bindClick("printReportBtn", () => {
-      this.printProfessionalReport();
+    bindClick("reportPreviewRibbonBtn", () => {
+      this.openReportPreview();
     });
 
     // Check Buttons
@@ -279,23 +406,8 @@ class UIManager {
     bindClick("checkResetPageBtn", () => {
       resetCheckDefaults();
     });
-    bindClick("checkPrintBtn", () => {
-      this.printProfessionalReport();
-    });
-    bindClick("checkPrintPageBtn", () => {
-      this.printProfessionalReport();
-    });
-    bindClick("professionalReportBtn", () => {
-      this.openProfessionalReport();
-    });
-    bindClick("checkProfessionalReportBtn", () => {
-      this.openProfessionalReport();
-    });
-    bindClick("pdfReportBtn", () => {
-      this.openPdfReport();
-    });
-    bindClick("checkPdfReportBtn", () => {
-      this.openPdfReport();
+    bindClick("checkReportPreviewBtn", () => {
+      this.openReportPreview();
     });
 
     // Export Buttons
@@ -306,17 +418,10 @@ class UIManager {
       });
     }
 
-    const exportReportBtn = el("exportReportBtn");
-    if (exportReportBtn) {
-      exportReportBtn.addEventListener("click", () => {
-        this.downloadProfessionalReport();
-      });
-    }
-
-    const pdfRibbonBtn = el("pdfRibbonBtn");
-    if (pdfRibbonBtn) {
-      pdfRibbonBtn.addEventListener("click", () => {
-        this.openPdfReport();
+    const exportDataRibbonBtn = el("exportDataRibbonBtn");
+    if (exportDataRibbonBtn) {
+      exportDataRibbonBtn.addEventListener("click", () => {
+        this.exportData();
       });
     }
 
@@ -324,6 +429,13 @@ class UIManager {
     const importBtn = el("importBtn");
     if (importBtn) {
       importBtn.addEventListener("click", () => {
+        this.importData();
+      });
+    }
+
+    const importDataRibbonBtn = el("importDataRibbonBtn");
+    if (importDataRibbonBtn) {
+      importDataRibbonBtn.addEventListener("click", () => {
         this.importData();
       });
     }
@@ -427,6 +539,7 @@ class UIManager {
     const data = {
       design: this.collectDesignData(),
       check: this.collectCheckData(),
+      formulas: { ...formulaSettings },
       timestamp: new Date().toISOString()
     };
     exportToJSON(data, "curve-design-export.json");
@@ -449,6 +562,9 @@ class UIManager {
           const data = JSON.parse(event.target.result);
           this.loadDesignData(data.design);
           this.loadCheckData(data.check);
+          if (data.formulas && typeof loadFormulaData === "function") {
+            loadFormulaData(data.formulas);
+          }
           alert("Data imported successfully!");
         } catch (error) {
           alert("Error importing file: " + error.message);
@@ -511,19 +627,31 @@ class UIManager {
     }
   }
 
-  openProfessionalReport() {
+  /**
+   * Collect formula settings
+   */
+  collectFormulaData() {
+    return { ...formulaSettings };
+  }
+
+  openReportPreview() {
     try {
-      reportExporter.openPreview();
-      this.showToast("Professional report preview opened.", "success");
+      reportExporter.openInPagePreview();
+      this.showToast("Report preview opened.", "success");
     } catch (error) {
       this.showToast(error.message, "error", 5000);
     }
   }
 
+  openProfessionalReport() {
+    this.openReportPreview();
+  }
+
   printProfessionalReport() {
     try {
-      reportExporter.print();
-      this.showToast("Professional print preview opened", "success");
+      reportExporter.openInPagePreview();
+      reportExporter.printPreview();
+      this.showToast("Print dialog opened.", "success");
     } catch (error) {
       this.showToast(error.message, "error", 5000);
     }
@@ -540,8 +668,9 @@ class UIManager {
 
   openPdfReport() {
     try {
-      reportExporter.openPdfDownloadWindow();
-      this.showToast("PDF preview opened and the print dialog was launched for Save as PDF.", "success", 5000);
+      reportExporter.openInPagePreview();
+      reportExporter.printPreview();
+      this.showToast("Choose Save as PDF in the print dialog.", "success", 5000);
     } catch (error) {
       this.showToast(error.message, "error", 5000);
     }

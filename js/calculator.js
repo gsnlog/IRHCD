@@ -14,19 +14,26 @@ function buildReport() {
   const cantLimit = getDesignCantLimit(d.trackStandard, d.routeGroup, d.turnoutTrack);
   const cdLimit = getDesignCdLimit(d.trackStandard, d.stockType, d.outerCrossingLimit);
   const cantExcessLimit = getCantExcessLimit(d.trackStandard);
-  const minimumRadius = MINIMUM_RADIUS_BY_STANDARD[d.trackStandard] || MINIMUM_RADIUS_BY_STANDARD.BG;
+  const minimumRadius = getMinimumRadius(d.trackStandard);
   const useRestrictedTransition = d.enableRestrictedTransition || d.problemType === "restrictedTransition";
   const useTrafficMix = d.enableTrafficMix || d.problemType === "trafficWeighted";
   const useMinimumRadius = d.problemType === "minimumRadius";
   const useTurnoutReview = d.problemType === "turnoutCrossover";
+  const factor = getTransitionRateFactor(d.curveType === "nonTransitioned");
+  const cantDivisor = getFormulaValue("cantDivisor");
+  const speedCoefficient = getFormulaValue("speedCoefficient");
+  const cantGradientFactor = getFormulaValue("cantGradientFactor");
+  const recommendedCantLabel = `${getFormulaValue("adoptedCantRoundTo")}mm rounded`;
 
   // Basic calculations
-  const calculatedVersine = d.radius > 0 ? (d.chordLength * d.chordLength * 1000) / (8 * d.radius) : NaN;
-  const equilibriumCant = d.radius > 0 ? (d.gauge * d.designSpeed * d.designSpeed) / (127 * d.radius) : NaN;
-  const actualCant = roundTo5(Math.min(cantLimit, equilibriumCant || 0));
-  const goodsEquilibriumCant = d.radius > 0 ? (d.gauge * d.goodsSpeed * d.goodsSpeed) / (127 * d.radius) : NaN;
+  const calculatedVersine = d.radius > 0 ? (d.chordLength * d.chordLength * getFormulaValue("versineMultiplier")) / (getFormulaValue("versineDivisor") * d.radius) : NaN;
+  const equilibriumCant = d.radius > 0 ? (d.gauge * d.designSpeed * d.designSpeed) / (cantDivisor * d.radius) : NaN;
+  const recommendedCant = roundTo5(Math.min(cantLimit, equilibriumCant || 0));
+  const hasUserAdoptedCant = Number.isFinite(d.adoptedCant) && d.adoptedCant > 0;
+  const actualCant = hasUserAdoptedCant ? d.adoptedCant : recommendedCant;
+  const goodsEquilibriumCant = d.radius > 0 ? (d.gauge * d.goodsSpeed * d.goodsSpeed) / (cantDivisor * d.radius) : NaN;
   const cantExcess = actualCant - goodsEquilibriumCant;
-  const transitionedSpeed = d.radius > 0 ? 0.27 * Math.sqrt(d.radius * (actualCant + cdLimit)) : NaN;
+  const transitionedSpeed = d.radius > 0 ? speedCoefficient * Math.sqrt(d.radius * (actualCant + cdLimit)) : NaN;
 
   // Traffic weighted speed
   const trafficGroups = [
@@ -35,18 +42,18 @@ function buildReport() {
     { n: d.trafficN3, w: d.trafficW3, v: d.trafficV3 }
   ];
   const weightedSpeed = useTrafficMix ? trafficWeightedSpeed(trafficGroups) : NaN;
-  const weightedCant = useTrafficMix && d.radius > 0 ? roundTo5(Math.min(cantLimit, (d.gauge * weightedSpeed * weightedSpeed) / (127 * d.radius))) : NaN;
+  const weightedCant = useTrafficMix && d.radius > 0 ? roundTo5(Math.min(cantLimit, (d.gauge * weightedSpeed * weightedSpeed) / (cantDivisor * d.radius))) : NaN;
 
   // Transition calculations
-  const desirableL1 = d.curveType === "nonTransitioned" ? 0.008 * actualCant * transitionedSpeed : 0.0056 * actualCant * transitionedSpeed;
-  const desirableL2 = d.curveType === "nonTransitioned" ? 0.008 * cdLimit * transitionedSpeed : 0.0056 * cdLimit * transitionedSpeed;
-  const desirableL3 = 0.72 * actualCant;
+  const desirableL1 = factor * actualCant * transitionedSpeed;
+  const desirableL2 = factor * cdLimit * transitionedSpeed;
+  const desirableL3 = cantGradientFactor * actualCant;
   const desirableTransition = ceilTo10(Math.max(desirableL1, desirableL2, desirableL3));
   d.transitionLength = useRestrictedTransition ? d.restrictedTransitionLength : desirableTransition;
 
   const minimumTransition = d.curveType === "nonTransitioned"
-    ? Math.max((2 / 3) * Math.max(desirableL1, desirableL2), 0.5 * desirableL3)
-    : Math.max((5 / 6) * Math.max(desirableL1, desirableL2), 0.5 * desirableL3);
+    ? Math.max(getFormulaValue("relaxedTransitionNonRateMultiplier") * Math.max(desirableL1, desirableL2), getFormulaValue("relaxedTransitionGradientMultiplier") * desirableL3)
+    : Math.max(getFormulaValue("relaxedTransitionRateMultiplier") * Math.max(desirableL1, desirableL2), getFormulaValue("relaxedTransitionGradientMultiplier") * desirableL3);
 
   // Geometric calculations
   const shift = d.radius > 0 ? (d.transitionLength * d.transitionLength) / (24 * d.radius) : NaN;
@@ -63,14 +70,14 @@ function buildReport() {
   );
 
   // Gradient and vertical curve
-  const compensation = d.radius > 0 ? 70 / d.radius : NaN;
+  const compensation = d.radius > 0 ? getFormulaValue("gradientCompensationFactor") / d.radius : NaN;
   const compensatedGradient = d.existingGradient - compensation;
   const gradeDifference = Math.abs(d.grade1 - d.grade2);
-  const minimumVerticalRadius = d.verticalGroup === "A" ? 4000 : d.verticalGroup === "B" ? 3000 : 2500;
+  const minimumVerticalRadius = getMinimumVerticalRadius(d.verticalGroup);
 
   // Minimum radius calculations
-  const minRadiusByGoods = (d.gauge * (d.designSpeed * d.designSpeed - d.goodsSpeed * d.goodsSpeed)) / (127 * (cantExcessLimit + cdLimit));
-  const minRadiusByCantDeficiency = (d.gauge * d.designSpeed * d.designSpeed) / (127 * (cantLimit + cdLimit));
+  const minRadiusByGoods = (d.gauge * (d.designSpeed * d.designSpeed - d.goodsSpeed * d.goodsSpeed)) / (cantDivisor * (cantExcessLimit + cdLimit));
+  const minRadiusByCantDeficiency = (d.gauge * d.designSpeed * d.designSpeed) / (cantDivisor * (cantLimit + cdLimit));
   const calculatedMinimumRadius = Math.max(minRadiusByGoods, minRadiusByCantDeficiency, minimumRadius);
 
   // Populate checks
@@ -86,6 +93,13 @@ function buildReport() {
     checks.push({ level: "warn", text: `Equilibrium cant exceeds the applicable design limit of ${cantLimit} mm, so the provided cant is capped.` });
   } else {
     checks.push({ level: "ok", text: `Calculated cant is within the design cant limit of ${cantLimit} mm.` });
+  }
+
+  if (hasUserAdoptedCant) {
+    checks.push({
+      level: actualCant > cantLimit ? "bad" : "ok",
+      text: `User adopted cant ${fmt(actualCant, "mm", 0)} is used for recalculation. Recommended cant was ${fmt(recommendedCant, "mm", 0)}.`
+    });
   }
 
   if (cantExcess > cantExcessLimit) {
@@ -108,12 +122,12 @@ function buildReport() {
 
   // Compound and reverse curves
   const compoundTransition = Math.max(
-    0.0056 * Math.abs(d.compoundCa1 - d.compoundCa2) * d.sectionalSpeed,
-    0.0056 * Math.abs(d.compoundCd1 - d.compoundCd2) * d.sectionalSpeed
+    getFormulaValue("transitionedRateFactor") * Math.abs(d.compoundCa1 - d.compoundCa2) * d.sectionalSpeed,
+    getFormulaValue("transitionedRateFactor") * Math.abs(d.compoundCd1 - d.compoundCd2) * d.sectionalSpeed
   );
   const reverseTransition = Math.max(
-    0.0056 * (d.reverseCa1 + d.reverseCa2) * d.sectionalSpeed,
-    0.0056 * (d.reverseCd1 + d.reverseCd2) * d.sectionalSpeed
+    getFormulaValue("transitionedRateFactor") * (d.reverseCa1 + d.reverseCa2) * d.sectionalSpeed,
+    getFormulaValue("transitionedRateFactor") * (d.reverseCd1 + d.reverseCd2) * d.sectionalSpeed
   );
 
   // Turnout checks
@@ -158,7 +172,7 @@ function buildReport() {
   }
 
   const mainLineTurnoutSpeed = (d.enableTurnout || useTurnoutReview) && d.radius > 0
-    ? Math.min(d.interlockingSpeed, d.sectionalSpeed, 0.27 * Math.sqrt(d.radius * (mainLineTurnoutCant + cdLimit)))
+    ? Math.min(d.interlockingSpeed, d.sectionalSpeed, speedCoefficient * Math.sqrt(d.radius * (mainLineTurnoutCant + cdLimit)))
     : NaN;
 
   turnoutStatus = statusFromChecks(turnoutChecks);
@@ -167,16 +181,20 @@ function buildReport() {
   // Generate HTML report
   const report = generateDesignReport({
     d, checks, turnoutChecks, cantLimit, cdLimit, cantExcessLimit, minimumRadius,
-    calculatedVersine, equilibriumCant, actualCant, goodsEquilibriumCant, cantExcess,
+    calculatedVersine, equilibriumCant, recommendedCant, hasUserAdoptedCant, recommendedCantLabel, actualCant, goodsEquilibriumCant, cantExcess,
     transitionedSpeed, weightedSpeed, weightedCant, desirableL1, desirableL2, desirableL3,
     desirableTransition, minimumTransition, shift, offset, bestSpeed, compensation,
     compensatedGradient, gradeDifference, minimumVerticalRadius, calculatedMinimumRadius,
     compoundTransition, reverseTransition, turnoutSpeed, mainLineTurnoutCant,
     mainLineTurnoutSpeed, turnoutStatus, overallStatus, useCompoundCase, useReverseCase, useMinimumRadius,
-    useRestrictedTransition, useTrafficMix, minRadiusByGoods, minRadiusByCantDeficiency
+    useRestrictedTransition, useTrafficMix, minRadiusByGoods, minRadiusByCantDeficiency,
+    factor, cantDivisor, speedCoefficient, cantGradientFactor
   });
 
-  el("report").innerHTML = report;
+  const reportEl = el("report");
+  if (reportEl) {
+    reportEl.innerHTML = report;
+  }
 
   // Also write to compound or reverse report if those pages are active
   if (activePage) {
@@ -197,14 +215,15 @@ function buildReport() {
 function generateDesignReport(params) {
   const {
     d, checks, turnoutChecks, cantLimit, cdLimit, minimumRadius,
-    calculatedVersine, equilibriumCant, actualCant, goodsEquilibriumCant,
+    calculatedVersine, equilibriumCant, recommendedCant, hasUserAdoptedCant, recommendedCantLabel, actualCant, goodsEquilibriumCant,
     cantExcess, transitionedSpeed, weightedSpeed, weightedCant, desirableL1,
     desirableL2, desirableL3, desirableTransition, minimumTransition, shift,
     offset, bestSpeed, compensation, compensatedGradient, gradeDifference,
     minimumVerticalRadius, calculatedMinimumRadius, compoundTransition,
     reverseTransition, turnoutSpeed, mainLineTurnoutCant, mainLineTurnoutSpeed,
     turnoutStatus, overallStatus, useCompoundCase, useReverseCase, useMinimumRadius, useRestrictedTransition,
-    useTrafficMix, minRadiusByGoods, minRadiusByCantDeficiency
+    useTrafficMix, minRadiusByGoods, minRadiusByCantDeficiency,
+    factor, cantDivisor, speedCoefficient, cantGradientFactor
   } = params;
 
   const bestSpeedDetail = bestSpeed
@@ -226,21 +245,22 @@ function generateDesignReport(params) {
     <div class="office-panel">
       <h3>Step-by-Step Calculation</h3>
       <div class="calc-steps">
-        ${calcStep("1", "Design Versine", `V = C² / (8R) × 1000`, `${d.chordLength}² / (8 × ${d.radius}) × 1000 = ${fmt(calculatedVersine, "mm")}`)}
-        ${calcStep("2", "Equilibrium Cant", `Ca = G × V² / (127R)`, `${d.gauge} × ${d.designSpeed}² / (127 × ${d.radius}) = ${fmt(equilibriumCant, "mm")}`)}
-        ${calcStep("3", "Adopted Cant", `Adopted = min(Ca, cant limit) rounded to 5 mm`, `min(${fmt(equilibriumCant, "mm")}, ${cantLimit} mm) = ${fmt(actualCant, "mm", 0)}`)}
-        ${calcStep("4", "Cant Excess", `Cant excess = adopted cant - goods equilibrium cant`, `${fmt(actualCant, "mm", 0)} - ${fmt(goodsEquilibriumCant, "mm")} = ${fmt(cantExcess, "mm")}`)}
-        ${calcStep("5", "Speed from Cant and Deficiency", `V = 0.27 × √(R × (Ca + Cd))`, `0.27 × √(${d.radius} × (${actualCant} + ${cdLimit})) = ${fmt(transitionedSpeed, "km/h")}`)}
-        ${calcStep("6", "Transition by Cant Rate", `L₁ = ${d.curveType === "nonTransitioned" ? "0.008" : "0.0056"} × Ca × V`, `${d.curveType === "nonTransitioned" ? "0.008" : "0.0056"} × ${actualCant} × ${fmt(transitionedSpeed, "", 2)} = ${fmt(desirableL1, "m")}`)}
-        ${calcStep("7", "Transition by Deficiency Rate", `L₂ = ${d.curveType === "nonTransitioned" ? "0.008" : "0.0056"} × Cd × V`, `${d.curveType === "nonTransitioned" ? "0.008" : "0.0056"} × ${cdLimit} × ${fmt(transitionedSpeed, "", 2)} = ${fmt(desirableL2, "m")}`)}
-        ${calcStep("8", "Transition by Gradient Rate", `L₃ = 0.72 × Ca`, `0.72 × ${actualCant} = ${fmt(desirableL3, "m")}`)}
-        ${calcStep("9", "Calculated Transition Length", `L = ceil to next 10 m of max(L₁, L₂, L₃)`, `max(${fmt(desirableL1, "m")}, ${fmt(desirableL2, "m")}, ${fmt(desirableL3, "m")}) = ${fmt(d.transitionLength, "m", 0)}`)}
-        ${calcStep("10", "Minimum Relaxed Transition", `Lmin = ${d.curveType === "nonTransitioned" ? "max(2/3×max(L₁,L₂), 0.5×L₃)" : "max(5/6×max(L₁,L₂), 0.5×L₃)"}`, `${fmt(minimumTransition, "m")}`)}
-        ${calcStep("11", "Shift at Transition Start", `Shift = L² / (24R)`, `${fmt(d.transitionLength, "m", 0)}² / (24 × ${d.radius}) = ${fmt(shift, "m")}`)}
-        ${calcStep("12", "Offset at X", `Offset = X³ / (6 R L)`, `${d.offsetX}³ / (6 × ${d.radius} × ${d.transitionLength}) = ${fmt(offset, "m")}`)}
-        ${calcStep("13", "Compensated Gradient", `Compensation = 70 / R`, `70 / ${d.radius} = ${fmt(compensation, "%")}`)}
-        ${calcStep("14", "Adjusted Gradient", `Existing – Compensation`, `${fmt(d.existingGradient, "%", 3)} - ${fmt(compensation, "%", 3)} = ${fmt(compensatedGradient, "%", 3)}`)}
-        ${calcStep("15", "Best Speed Result", `Final permissible speed based on cant, deficiency, and transition`, bestSpeed ? `${bestSpeedDetail} Result: ${fmt(bestSpeed.speed, "km/h", 0)}` : bestSpeedDetail)}
+        ${calcStep("1", "Design Versine", `V = C^2 / (${getFormulaValue("versineDivisor")}R) x ${getFormulaValue("versineMultiplier")}`, `${d.chordLength}^2 / (${getFormulaValue("versineDivisor")} x ${d.radius}) x ${getFormulaValue("versineMultiplier")} = ${fmt(calculatedVersine, "mm")}`)}
+        ${calcStep("2", "Equilibrium Cant", `Ca = G x V^2 / (${cantDivisor}R)`, `${d.gauge} x ${d.designSpeed}^2 / (${cantDivisor} x ${d.radius}) = ${fmt(equilibriumCant, "mm")}`)}
+        ${calcStep("3", "Adopted Cant", hasUserAdoptedCant ? `Adopted cant entered by user` : `Adopted = min(Ca, cant limit), ${recommendedCantLabel}`, hasUserAdoptedCant ? `User adopted cant = ${fmt(actualCant, "mm", 0)}; calculated recommendation = ${fmt(recommendedCant, "mm", 0)}` : `min(${fmt(equilibriumCant, "mm")}, ${cantLimit} mm) = ${fmt(actualCant, "mm", 0)}`)}
+        ${calcStep("4", "Goods Equilibrium Cant", `Ca goods = G x Vgoods^2 / (${cantDivisor}R)`, `${d.gauge} x ${d.goodsSpeed}^2 / (${cantDivisor} x ${d.radius}) = ${fmt(goodsEquilibriumCant, "mm")}`)}
+        ${calcStep("5", "Cant Excess", `Cant excess = adopted cant - goods equilibrium cant`, `${fmt(actualCant, "mm", 0)} - ${fmt(goodsEquilibriumCant, "mm")} = ${fmt(cantExcess, "mm")}`)}
+        ${calcStep("6", "Speed from Cant and Deficiency", `V = ${speedCoefficient} x sqrt(R x (Ca + Cd))`, `${speedCoefficient} x sqrt(${d.radius} x (${actualCant} + ${cdLimit})) = ${fmt(transitionedSpeed, "km/h")}`)}
+        ${calcStep("7", "Transition by Cant Rate", `L1 = ${factor} x Ca x V`, `${factor} x ${actualCant} x ${fmt(transitionedSpeed, "", 2)} = ${fmt(desirableL1, "m")}`)}
+        ${calcStep("8", "Transition by Deficiency Rate", `L2 = ${factor} x Cd x V`, `${factor} x ${cdLimit} x ${fmt(transitionedSpeed, "", 2)} = ${fmt(desirableL2, "m")}`)}
+        ${calcStep("9", "Transition by Gradient Rate", `L3 = ${cantGradientFactor} x Ca`, `${cantGradientFactor} x ${actualCant} = ${fmt(desirableL3, "m")}`)}
+        ${calcStep("10", "Calculated Transition Length", `L = ceil to next ${getFormulaValue("transitionRoundTo")} m of max(L1, L2, L3)`, `max(${fmt(desirableL1, "m")}, ${fmt(desirableL2, "m")}, ${fmt(desirableL3, "m")}) = ${fmt(d.transitionLength, "m", 0)}`)}
+        ${calcStep("11", "Minimum Relaxed Transition", `Lmin = rate multiplier x max(L1,L2) or gradient multiplier x L3`, `${fmt(minimumTransition, "m")}`)}
+        ${calcStep("12", "Shift at Transition Start", `Shift = L^2 / (24R)`, `${fmt(d.transitionLength, "m", 0)}^2 / (24 x ${d.radius}) = ${fmt(shift, "m")}`)}
+        ${calcStep("13", "Offset at X", `Offset = X^3 / (6 R L)`, `${d.offsetX}^3 / (6 x ${d.radius} x ${d.transitionLength}) = ${fmt(offset, "m")}`)}
+        ${calcStep("14", "Compensated Gradient", `Compensation = ${getFormulaValue("gradientCompensationFactor")} / R`, `${getFormulaValue("gradientCompensationFactor")} / ${d.radius} = ${fmt(compensation, "%")}`)}
+        ${calcStep("15", "Adjusted Gradient", `Existing – Compensation`, `${fmt(d.existingGradient, "%", 3)} - ${fmt(compensation, "%", 3)} = ${fmt(compensatedGradient, "%", 3)}`)}
+        ${calcStep("16", "Best Speed Result", `Final permissible speed based on cant, deficiency, and transition`, bestSpeed ? `${bestSpeedDetail} Result: ${fmt(bestSpeed.speed, "km/h", 0)}` : bestSpeedDetail)}
       </div>
     </div>
   `;
@@ -265,13 +285,15 @@ function generateDesignReport(params) {
       <h3>${d.curveName} Design Summary</h3>
       <table>
         <tr><th>Item</th><th>Result</th></tr>
-        <tr><td>Design Problem Type</td><td>${txt("problemType").replace(/([A-Z])/g, " $1").trim()}</td></tr>
+        <tr><td>Design Problem Type</td><td>${humanizeProblemType(d.problemType)}</td></tr>
         <tr><td>Track Standard</td><td>${d.trackStandard}</td></tr>
         <tr><td>Curve Type</td><td>${d.curveType === "transitioned" ? "Fully Transitioned" : "Non-transitioned with Virtual Transition"}</td></tr>
         <tr><td>Minimum Radius Constraint</td><td>${fmt(minimumRadius, "m", 0)}</td></tr>
         <tr><td>Calculated Versine (C=${d.chordLength}m)</td><td>${fmt(calculatedVersine, "mm")}</td></tr>
         <tr><td>Equilibrium Cant @ Design Speed</td><td>${fmt(equilibriumCant, "mm")}</td></tr>
-        <tr><td>Adopted Cant (5mm rounded)</td><td>${fmt(actualCant, "mm", 0)}</td></tr>
+        <tr><td>Goods Equilibrium Cant @ Goods Speed</td><td>${fmt(goodsEquilibriumCant, "mm")}</td></tr>
+        <tr><td>Recommended Adopted Cant</td><td>${fmt(recommendedCant, "mm", 0)}</td></tr>
+        <tr><td>Adopted Cant Used</td><td>${fmt(actualCant, "mm", 0)} (${hasUserAdoptedCant ? "user input" : recommendedCantLabel})</td></tr>
         <tr><td>Cant Deficiency Used</td><td>${fmt(cdLimit, "mm", 0)}</td></tr>
         <tr><td>Cant Excess @ Goods Speed</td><td>${fmt(cantExcess, "mm")}</td></tr>
         <tr><td>Calculated Transition Length</td><td>${fmt(d.transitionLength, "m", 0)}</td></tr>
@@ -335,30 +357,33 @@ function buildCheckReport() {
   const checks = [];
   const cantLimit = getCantLimit(d.routeGroup, d.turnoutTrack);
   const cdLimit = getCdLimit(d.stockType, d.outerCrossingLimit);
-  const bgMinimumRadius = MINIMUM_RADIUS_BY_STANDARD.BG;
+  const bgMinimumRadius = getMinimumRadius("BG");
+  const cantDivisor = getFormulaValue("cantDivisor");
+  const speedCoefficient = getFormulaValue("speedCoefficient");
+  const factor = getTransitionRateFactor(d.curveType === "nonTransitioned");
+  const cantGradientFactor = getFormulaValue("cantGradientFactor");
 
   // Calculations
-  const radiusFromVersine = d.versine > 0 ? (125 * d.chordLength * d.chordLength) / d.versine : NaN;
-  const equilibriumCant = d.radius > 0 ? (d.gauge * d.speed * d.speed) / (127 * d.radius) : NaN;
+  const radiusFromVersine = d.versine > 0 ? (getFormulaValue("radiusFromVersineFactor") * d.chordLength * d.chordLength) / d.versine : NaN;
+  const equilibriumCant = d.radius > 0 ? (d.gauge * d.speed * d.speed) / (cantDivisor * d.radius) : NaN;
   const cantDeficiency = Math.max(0, equilibriumCant - d.measuredCant);
-  const goodsEquilibriumCant = d.radius > 0 ? (d.gauge * d.goodsSpeed * d.goodsSpeed) / (127 * d.radius) : NaN;
+  const goodsEquilibriumCant = d.radius > 0 ? (d.gauge * d.goodsSpeed * d.goodsSpeed) / (cantDivisor * d.radius) : NaN;
   const cantExcess = d.measuredCant - goodsEquilibriumCant;
-  const speedByCant = d.radius > 0 ? 0.27 * Math.sqrt(d.radius * (d.measuredCant + cdLimit)) : NaN;
+  const speedByCant = d.radius > 0 ? speedCoefficient * Math.sqrt(d.radius * (d.measuredCant + cdLimit)) : NaN;
 
-  const factor = d.curveType === "nonTransitioned" ? 0.008 : 0.0056;
   const requiredByCantRate = factor * d.measuredCant * d.speed;
   const requiredByDeficiencyRate = factor * cantDeficiency * d.speed;
-  const requiredByGradient = 0.72 * d.measuredCant;
+  const requiredByGradient = cantGradientFactor * d.measuredCant;
   const requiredTransition = ceilTo10(Math.max(requiredByCantRate, requiredByDeficiencyRate, requiredByGradient));
 
   const minimumTransition = d.curveType === "nonTransitioned"
-    ? Math.max((2 / 3) * Math.max(requiredByCantRate, requiredByDeficiencyRate), 0.5 * requiredByGradient)
-    : Math.max((5 / 6) * Math.max(requiredByCantRate, requiredByDeficiencyRate), 0.5 * requiredByGradient);
+    ? Math.max(getFormulaValue("relaxedTransitionNonRateMultiplier") * Math.max(requiredByCantRate, requiredByDeficiencyRate), getFormulaValue("relaxedTransitionGradientMultiplier") * requiredByGradient)
+    : Math.max(getFormulaValue("relaxedTransitionRateMultiplier") * Math.max(requiredByCantRate, requiredByDeficiencyRate), getFormulaValue("relaxedTransitionGradientMultiplier") * requiredByGradient);
 
-  const compensation = d.radius > 0 ? 70 / d.radius : NaN;
+  const compensation = d.radius > 0 ? getFormulaValue("gradientCompensationFactor") / d.radius : NaN;
   const compensatedGradient = d.existingGradient - compensation;
   const gradeDifference = Math.abs(d.grade1 - d.grade2);
-  const minimumVerticalRadius = d.verticalGroup === "A" ? 4000 : d.verticalGroup === "B" ? 3000 : 2500;
+  const minimumVerticalRadius = getMinimumVerticalRadius(d.verticalGroup);
 
   // Check compliance
   if (d.radius < bgMinimumRadius) {
@@ -423,5 +448,12 @@ function buildCheckReport() {
     </div>
   `;
 
-  el("checkReport").innerHTML = checkReport;
+  const checkReportEl = el("checkReport");
+  if (checkReportEl) {
+    checkReportEl.innerHTML = checkReport;
+  }
+}
+
+function humanizeProblemType(problemType) {
+  return PROBLEM_TYPES[problemType] || "Standard cant and transition design";
 }
