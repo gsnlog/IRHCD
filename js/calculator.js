@@ -251,7 +251,7 @@ function generateDesignReport(params) {
         ${calcStep("4", "Goods Equilibrium Cant", `Ca goods = G x Vgoods^2 / (${cantDivisor}R)`, `${d.gauge} x ${d.goodsSpeed}^2 / (${cantDivisor} x ${d.radius}) = ${fmt(goodsEquilibriumCant, "mm")}`)}
         ${calcStep("5", "Cant Excess", `Cant excess = adopted cant - goods equilibrium cant`, `${fmt(actualCant, "mm", 0)} - ${fmt(goodsEquilibriumCant, "mm")} = ${fmt(cantExcess, "mm")}`)}
         ${calcStep("6", "Speed from Cant and Deficiency", `V = ${speedCoefficient} x sqrt(R x (Ca + Cd))`, `${speedCoefficient} x sqrt(${d.radius} x (${actualCant} + ${cdLimit})) = ${fmt(transitionedSpeed, "km/h")}`)}
-        ${calcStep("7", "Transition by Cant Rate", `L1 = ${factor} x Ca x V`, `${factor} x ${actualCant} x ${fmt(transitionedSpeed, "", 2)} = ${fmt(desirableL1, "m")}`)}
+        ${calcStep("7", "Transition by Cant Rate", `L1 = ${factor} x Ca x V`, `${factor} x ${actualCant} x ${fmt(transitionedSpeed, "", 2)} = ${fmt(desirableL1, "m")}`, `L2 = ${factor} x Cd x V`, `${factor} x ${cdLimit} x ${fmt(transitionedSpeed, "", 2)} = ${fmt(desirableL2, "m")}`)}
         ${calcStep("8", "Transition by Deficiency Rate", `L2 = ${factor} x Cd x V`, `${factor} x ${cdLimit} x ${fmt(transitionedSpeed, "", 2)} = ${fmt(desirableL2, "m")}`)}
         ${calcStep("9", "Transition by Gradient Rate", `L3 = ${cantGradientFactor} x Ca`, `${cantGradientFactor} x ${actualCant} = ${fmt(desirableL3, "m")}`)}
         ${calcStep("10", "Calculated Transition Length", `L = ceil to next ${getFormulaValue("transitionRoundTo")} m of max(L1, L2, L3)`, `max(${fmt(desirableL1, "m")}, ${fmt(desirableL2, "m")}, ${fmt(desirableL3, "m")}) = ${fmt(d.transitionLength, "m", 0)}`)}
